@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
 
 /* ==========================================================================
    PRESS & PROOF — UNIFIED GLOBAL DESIGN SYSTEM
@@ -9,21 +8,36 @@
 
 :root {
   /* 1. Core Color Palette */
-  --paper: #F7F5EF;          /* Warm ivory background */
-  --surface: #FFFEFA;        /* Warm white surface */
-  --surface-hover: #F0EEE7;  /* Subtle hover surface / cream */
-  --ink: #22211E;            /* Primary editorial text */
-  --muted: #626B78;          /* Secondary slate text */
-  --rust: #C45B40;           /* Terracotta accent & attention */
-  --rust-hover: #AF4F36;     /* Darker terracotta */
-  --navy: #244E72;           /* Deep navy primary action */
-  --navy-hover: #1B3C58;     /* Deep navy hover */
-  --sage: #D9DED5;           /* Muted sage backdrop */
-  --sage-dark: #37533E;      /* Sage text for high contrast */
-  --yellow: #E8CE78;         /* Soft mustard */
-  --highlight: #F0E5B8;      /* Pale yellow highlight */
-  --line: #DED9CF;           /* Border & divider */
-  --line-strong: #C4BEB2;    /* Emphasized divider */
+  --paper: #F7F5EF;
+  /* Warm ivory background */
+  --surface: #FFFEFA;
+  /* Warm white surface */
+  --surface-hover: #F0EEE7;
+  /* Subtle hover surface / cream */
+  --ink: #22211E;
+  /* Primary editorial text */
+  --muted: #626B78;
+  /* Secondary slate text */
+  --rust: #C45B40;
+  /* Terracotta accent & attention */
+  --rust-hover: #AF4F36;
+  /* Darker terracotta */
+  --navy: #244E72;
+  /* Deep navy primary action */
+  --navy-hover: #1B3C58;
+  /* Deep navy hover */
+  --sage: #D9DED5;
+  /* Muted sage backdrop */
+  --sage-dark: #37533E;
+  /* Sage text for high contrast */
+  --yellow: #E8CE78;
+  /* Soft mustard */
+  --highlight: #F0E5B8;
+  /* Pale yellow highlight */
+  --line: #DED9CF;
+  /* Border & divider */
+  --line-strong: #C4BEB2;
+  /* Emphasized divider */
 
   /* 2. Semantic Feedback Colors */
   --success: #2B6637;
@@ -103,14 +117,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-button, input, textarea, select {
+button,
+input,
+textarea,
+select {
   font: inherit;
   color: inherit;
   transition: border-color var(--duration-fast) var(--ease),
-              background-color var(--duration-fast) var(--ease),
-              color var(--duration-fast) var(--ease),
-              transform var(--duration-fast) var(--ease),
-              box-shadow var(--duration-fast) var(--ease);
+    background-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease),
+    box-shadow var(--duration-fast) var(--ease);
 }
 
 button {
@@ -132,7 +149,11 @@ textarea:focus-visible,
    Global Typography Hierarchy
    ========================================================================== */
 
-h1, h2, h3, h4, h5 {
+h1,
+h2,
+h3,
+h4,
+h5 {
   font-family: var(--font-serif);
   font-weight: 400;
   color: var(--ink);
@@ -146,7 +167,8 @@ h1 {
   letter-spacing: -0.04em;
 }
 
-h1 em, h2 em {
+h1 em,
+h2 em {
   font-style: italic;
   color: var(--rust);
 }
@@ -262,7 +284,8 @@ p {
   margin-right: var(--space-8);
 }
 
-.desktop-nav button, .desktop-nav a {
+.desktop-nav button,
+.desktop-nav a {
   color: var(--muted);
   font-size: 11px;
   font-family: var(--font-mono);
@@ -274,7 +297,8 @@ p {
   font-weight: 500;
 }
 
-.desktop-nav button:hover, .desktop-nav button.active {
+.desktop-nav button:hover,
+.desktop-nav button.active {
   color: var(--navy);
 }
 
@@ -427,9 +451,20 @@ p {
 }
 
 @keyframes pulse-dot {
-  0% { transform: scale(0.9); opacity: 0.8; }
-  50% { transform: scale(1.15); opacity: 1; }
-  100% { transform: scale(0.9); opacity: 0.8; }
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
 }
 
 .audit-badge {
@@ -568,8 +603,15 @@ p {
   border: 1px solid rgba(34, 33, 30, 0.1);
 }
 
-.note-one { top: 22%; left: 10%; }
-.note-two { bottom: 20%; right: 12%; }
+.note-one {
+  top: 22%;
+  left: 10%;
+}
+
+.note-two {
+  bottom: 20%;
+  right: 12%;
+}
 
 .hero-estimate {
   position: absolute;
@@ -584,7 +626,8 @@ p {
   border: 1px solid var(--line);
 }
 
-.hero-estimate span, .hero-estimate i {
+.hero-estimate span,
+.hero-estimate i {
   display: block;
   font-family: var(--font-mono);
   font-size: 9px;
@@ -631,7 +674,9 @@ p {
 }
 
 /* Audience Grid */
-.audience-grid, .quote-grid, .steps-grid {
+.audience-grid,
+.quote-grid,
+.steps-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1px;
@@ -668,7 +713,8 @@ p {
 }
 
 /* Products Grid */
-.product-grid, .catalogue-grid {
+.product-grid,
+.catalogue-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-6);
@@ -681,8 +727,8 @@ p {
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: transform var(--duration-fast) var(--ease),
-              box-shadow var(--duration-fast) var(--ease),
-              border-color var(--duration-fast) var(--ease);
+    box-shadow var(--duration-fast) var(--ease),
+    border-color var(--duration-fast) var(--ease);
   display: flex;
   flex-direction: column;
 }
@@ -703,10 +749,21 @@ p {
   border-bottom: 1px solid var(--line);
 }
 
-.tone-0 { background-color: #D3DAD3; }
-.tone-1 { background-color: #E8D9D2; }
-.tone-2 { background-color: #DDDBCB; }
-.tone-3 { background-color: #DDD8D0; }
+.tone-0 {
+  background-color: #D3DAD3;
+}
+
+.tone-1 {
+  background-color: #E8D9D2;
+}
+
+.tone-2 {
+  background-color: #DDDBCB;
+}
+
+.tone-3 {
+  background-color: #DDD8D0;
+}
 
 .card-meta {
   padding: var(--space-6);
@@ -856,7 +913,8 @@ p {
   border: 1px solid rgba(34, 33, 30, 0.1);
 }
 
-.estimate-mini span, .estimate-mini i {
+.estimate-mini span,
+.estimate-mini i {
   display: block;
   font-family: var(--font-mono);
   font-size: 10px;
@@ -996,7 +1054,8 @@ p {
   color: var(--ink);
 }
 
-.footer-col button, .footer-col a {
+.footer-col button,
+.footer-col a {
   text-align: left;
   padding: 0;
   color: var(--muted);
@@ -1005,7 +1064,8 @@ p {
   text-decoration: none;
 }
 
-.footer-col button:hover, .footer-col a:hover {
+.footer-col button:hover,
+.footer-col a:hover {
   color: var(--navy);
 }
 
@@ -1041,7 +1101,7 @@ p {
   margin-bottom: var(--space-3);
 }
 
-.page-intro > p:last-child {
+.page-intro>p:last-child {
   color: var(--muted);
   font-size: 15px;
   max-width: 600px;
@@ -1140,7 +1200,7 @@ p {
   gap: var(--space-3);
 }
 
-.filters > b {
+.filters>b {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.1em;
@@ -1305,7 +1365,7 @@ p {
   opacity: 0.85;
 }
 
-.config-step > span {
+.config-step>span {
   display: block;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -1432,7 +1492,7 @@ p {
   box-shadow: var(--shadow-sm);
 }
 
-.price-panel > b {
+.price-panel>b {
   font-family: var(--font-serif);
   font-size: 40px;
   font-weight: 400;
@@ -1441,7 +1501,7 @@ p {
   line-height: 1;
 }
 
-.price-panel > b small {
+.price-panel>b small {
   font-family: var(--font-sans);
   font-size: 12px;
   color: var(--muted);
@@ -1457,7 +1517,8 @@ p {
   margin: var(--space-4) 0;
 }
 
-.breakdown span, .grand-total {
+.breakdown span,
+.grand-total {
   display: flex;
   justify-content: space-between;
   font-size: 13px;
@@ -1495,7 +1556,8 @@ p {
    Upload & Proof Views
    ========================================================================== */
 
-.upload-layout, .proof-layout {
+.upload-layout,
+.proof-layout {
   display: grid;
   grid-template-columns: 1.35fr 0.75fr;
   gap: var(--space-16);
@@ -1857,7 +1919,8 @@ p {
   object-fit: contain;
 }
 
-.manuscript-loading, .manuscript-error {
+.manuscript-loading,
+.manuscript-error {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2641,7 +2704,8 @@ p {
    Checkout, Confirmation & Tracking Views
    ========================================================================== */
 
-.checkout-card, .simple-card {
+.checkout-card,
+.simple-card {
   background-color: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -2851,38 +2915,53 @@ p {
   .hero {
     grid-template-columns: 1fr;
   }
+
   .hero-art {
     min-height: 380px;
     border-left: 0;
     border-top: 1px solid var(--line);
   }
-  .audience-grid, .quote-grid {
+
+  .audience-grid,
+  .quote-grid {
     grid-template-columns: 1fr;
   }
-  .product-grid, .catalogue-grid {
+
+  .product-grid,
+  .catalogue-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
   .steps-grid {
     grid-template-columns: 1fr;
   }
+
   .step {
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
+
   .pricing-banner {
     flex-direction: column;
     align-items: flex-start;
   }
-  .catalogue, .configurator, .upload-layout, .proof-layout {
+
+  .catalogue,
+  .configurator,
+  .upload-layout,
+  .proof-layout {
     grid-template-columns: 1fr;
     gap: var(--space-8);
   }
+
   .filters {
     display: none;
   }
+
   .price-panel {
     position: static;
   }
+
   .footer-top {
     grid-template-columns: 1fr 1fr;
   }
@@ -2892,24 +2971,34 @@ p {
   .site-header {
     height: 64px;
   }
-  .desktop-nav, .header-cta {
+
+  .desktop-nav,
+  .header-cta {
     display: none;
   }
+
   .mobile-menu {
     display: block;
   }
-  .product-grid, .catalogue-grid, .payment-methods-grid, .option-grid {
+
+  .product-grid,
+  .catalogue-grid,
+  .payment-methods-grid,
+  .option-grid {
     grid-template-columns: 1fr;
   }
+
   .hero-estimate {
     right: 4%;
     bottom: 6%;
     width: 200px;
     padding: var(--space-4);
   }
+
   .footer-top {
     grid-template-columns: 1fr;
   }
+
   .footer-bottom {
     flex-direction: column;
     gap: var(--space-2);
@@ -2920,7 +3009,10 @@ p {
   html {
     scroll-behavior: auto;
   }
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     transition: none !important;
     animation: none !important;
   }
