@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, ChevronRight, Send } from 'lucide-react';
 import { StorefrontPage } from '../../../types';
 import { useOrderFlow } from '../../../context/OrderFlowContext';
 import { Footer } from '../../../components/layout/Footer';
@@ -17,13 +16,13 @@ export function BulkQuotesView({ onNavigate: propNavigate }: BulkQuotesViewProps
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     company: '',
-    name: '',
-    email: '',
-    phone: '',
+    name: 'Ayush Singh',
+    email: 'ayush@example.com',
+    phone: '+91 98765 43210',
     product: 'books',
     quantity: '2500',
     finishing: 'hardcover',
-    pin: '',
+    pin: '110001',
     notes: '',
   });
 
@@ -33,325 +32,158 @@ export function BulkQuotesView({ onNavigate: propNavigate }: BulkQuotesViewProps
   };
 
   return (
-    <>
-      <div className="page-intro">
-        <div className="breadcrumbs">
-          <button onClick={() => onNavigate('home')}>Home</button>
-          <ChevronRight size={13} />
-          <span>Bulk Quotes</span>
-        </div>
-        <p className="eyebrow">COMMERCIAL &amp; HIGH-VOLUME PRINTING</p>
-        <h1>Bespoke quotes for large print runs.</h1>
-        <p>
-          Procuring 500 to 50,000+ copies? Dedicated account management, physical proofs, and custom
-          logistics across India.
-        </p>
-      </div>
-
-      <main className="section" style={{ maxWidth: 960 }}>
-        {submitted ? (
-          <div className="simple-card" style={{ maxWidth: 600 }}>
-            <div className="success-icon">
-              <Check size={28} />
-            </div>
-            <p className="eyebrow" style={{ textAlign: 'center' }}>
-              REQUEST RECEIVED
-            </p>
-            <h2 style={{ textAlign: 'center', fontSize: 32 }}>Your bulk quote is being prepared</h2>
-            <p style={{ textAlign: 'center', color: 'var(--muted)', margin: '14px 0 24px' }}>
-              Reference <b>BQ-{Math.floor(100000 + Math.random() * 900000)}</b> registered. A
-              dedicated print production manager will review your specifications and contact{' '}
-              <b>{formData.email}</b> within 4 business hours.
-            </p>
-            <button className="btn btn-primary" onClick={() => setSubmitted(false)}>
-              Submit another request
-            </button>
+    <div className="w-full">
+      <div className="proof-container py-8 md:py-16">
+        <div className="border-b border-[#0F1218] pb-4 mb-8">
+          <div className="flex justify-between items-baseline flex-wrap gap-2">
+            <h1>Commercial Print Runs</h1>
+            <span className="sample-stamp">Bulk quotes</span>
           </div>
-        ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1.2fr 0.8fr',
-              gap: 'var(--space-12)',
-            }}
-          >
-            <form
-              onSubmit={handleSubmit}
-              className="checkout-card"
-              style={{ maxWidth: '100%', margin: 0 }}
-            >
-              <p className="eyebrow" style={{ margin: '0 0 16px' }}>
-                ESTIMATE REQUEST FORM
-              </p>
+          <p className="reading-text-soft text-sm mt-1">
+            Procuring 500 to 50,000+ copies. Account management, physical press proofs and logistics across India.
+          </p>
+        </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="proof-sheet p-8 md:p-12 border border-[#0F1218] bg-white max-w-3xl">
+          {submitted ? (
+            <div className="p-8 bg-[#E8EAEE] border border-[#0F1218] text-center space-y-3">
+              <span className="sample-stamp">Demo submitted</span>
+              <h2 className="text-2xl font-bold">Commercial quote draft received</h2>
+              <p className="reading-text-soft text-sm max-w-lg mx-auto">
+                This prototype simulates bulk procurement workflows. In production, an account executive reviews custom stock, paper caliper and dispatch schedule.
+              </p>
+              <div className="pt-4">
+                <button
+                  type="button"
+                  onClick={() => setSubmitted(false)}
+                  className="btn-proof-secondary text-xs"
+                >
+                  Submit another request
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      font: 'var(--font-mono)',
-                      fontSize: 10,
-                      marginBottom: 6,
-                    }}
-                  >
-                    ORGANIZATION / COMPANY NAME
+                  <label className="text-xs font-semibold text-[#5A6070] block mb-1">
+                    Company or institution
                   </label>
                   <input
+                    type="text"
                     required
-                    placeholder="e.g. Oxford University Press India"
                     value={formData.company}
                     onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      border: '1px solid var(--line)',
-                      borderRadius: 'var(--radius-sm)',
-                      backgroundColor: 'var(--surface)',
-                    }}
+                    placeholder="e.g. Ashoka University"
+                    className="w-full p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm"
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        font: 'var(--font-mono)',
-                        fontSize: 10,
-                        marginBottom: 6,
-                      }}
-                    >
-                      CONTACT PERSON
-                    </label>
-                    <input
-                      required
-                      placeholder="Full Name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        border: '1px solid var(--line)',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--surface)',
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        font: 'var(--font-mono)',
-                        fontSize: 10,
-                        marginBottom: 6,
-                      }}
-                    >
-                      PHONE NUMBER
-                    </label>
-                    <input
-                      required
-                      placeholder="+91 98765 43210"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        border: '1px solid var(--line)',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--surface)',
-                      }}
-                    />
-                  </div>
+                <div>
+                  <label className="text-xs font-semibold text-[#5A6070] block mb-1">
+                    Contact name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm"
+                  />
                 </div>
 
                 <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      font: 'var(--font-mono)',
-                      fontSize: 10,
-                      marginBottom: 6,
-                    }}
-                  >
-                    WORK EMAIL
+                  <label className="text-xs font-semibold text-[#5A6070] block mb-1">
+                    Email address
                   </label>
                   <input
                     type="email"
                     required
-                    placeholder="procurement@company.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      border: '1px solid var(--line)',
-                      borderRadius: 'var(--radius-sm)',
-                      backgroundColor: 'var(--surface)',
-                    }}
+                    className="w-full p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm"
                   />
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        font: 'var(--font-mono)',
-                        fontSize: 10,
-                        marginBottom: 6,
-                      }}
-                    >
-                      PRODUCT TYPE
-                    </label>
-                    <select
-                      value={formData.product}
-                      onChange={(e) => setFormData({ ...formData, product: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        border: '1px solid var(--line)',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--surface)',
-                      }}
-                    >
-                      <option value="books">Books &amp; Monographs</option>
-                      <option value="documents">Reports &amp; Manuals</option>
-                      <option value="cards">Corporate Cards</option>
-                      <option value="marketing">Flyers &amp; Catalogues</option>
-                      <option value="packaging">Custom Packaging</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        font: 'var(--font-mono)',
-                        fontSize: 10,
-                        marginBottom: 6,
-                      }}
-                    >
-                      TARGET QUANTITY
-                    </label>
-                    <input
-                      required
-                      placeholder="e.g. 5,000"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        border: '1px solid var(--line)',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--surface)',
-                      }}
-                    />
-                  </div>
                 </div>
 
                 <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      font: 'var(--font-mono)',
-                      fontSize: 10,
-                      marginBottom: 6,
-                    }}
-                  >
-                    CUSTOM SPECIFICATIONS &amp; DELIVERY DEADLINE
+                  <label className="text-xs font-semibold text-[#5A6070] block mb-1">
+                    Phone number
                   </label>
-                  <textarea
-                    rows={3}
-                    placeholder="Mention custom page counts, spot UV, foil stamping, FSC certified paper requirements, or specific delivery dates..."
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px 14px',
-                      border: '1px solid var(--line)',
-                      borderRadius: 'var(--radius-sm)',
-                      backgroundColor: 'var(--surface)',
-                    }}
+                  <input
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm tabular-nums"
                   />
                 </div>
 
-                <button
-                  className="btn btn-primary"
-                  type="submit"
-                  style={{ padding: '14px 20px', marginTop: 10 }}
-                >
-                  <Send size={14} /> Submit Commercial Quote Request
+                <div>
+                  <label className="text-xs font-semibold text-[#5A6070] block mb-1">
+                    Product category
+                  </label>
+                  <select
+                    value={formData.product}
+                    onChange={(e) => setFormData({ ...formData, product: e.target.value })}
+                    className="w-full p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm"
+                  >
+                    <option value="books">Hardcover &amp; Paperback Books</option>
+                    <option value="brochures">Folded Brochures &amp; Catalogues</option>
+                    <option value="documents">Reports &amp; Corporate Collateral</option>
+                    <option value="packaging">Custom Print Packaging</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-[#5A6070] block mb-1">
+                    Quantity (copies)
+                  </label>
+                  <input
+                    type="number"
+                    min="500"
+                    step="100"
+                    required
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    className="w-full p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm tabular-nums"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-[#5A6070] block mb-1">
+                  Custom specifications and delivery deadline
+                </label>
+                <textarea
+                  rows={4}
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Detail paper GSM preferences, binding style, spot UV or foil requirements, and delivery location..."
+                  className="w-full p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                <button type="submit" className="btn-proof-primary py-3 px-8 text-sm">
+                  Submit commercial request
                 </button>
+                <a
+                  href="https://wa.me/919999999999?text=Commercial%20Print%20Inquiry"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-proof-secondary py-3 px-6 text-xs"
+                >
+                  Message us on WhatsApp
+                </a>
               </div>
             </form>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div
-                style={{
-                  padding: 24,
-                  backgroundColor: 'var(--surface)',
-                  border: '1px solid var(--line)',
-                  borderRadius: 'var(--radius-lg)',
-                }}
-              >
-                <b
-                  style={{
-                    font: 'var(--font-serif)',
-                    fontSize: 18,
-                    display: 'block',
-                    marginBottom: 12,
-                  }}
-                >
-                  Commercial Volume Benefits
-                </b>
-                <ul
-                  style={{
-                    paddingLeft: 18,
-                    color: 'var(--muted)',
-                    fontSize: 13,
-                    lineHeight: 1.8,
-                    margin: 0,
-                  }}
-                >
-                  <li>Custom quantity breaks beyond 10,000 units</li>
-                  <li>Complimentary physical press proof</li>
-                  <li>Split shipping to multiple offices across India</li>
-                  <li>GST e-invoicing &amp; 30-day corporate credit terms</li>
-                  <li>FSC certified &amp; archival paper sourcing</li>
-                </ul>
-              </div>
-
-              <div
-                style={{
-                  padding: 24,
-                  backgroundColor: 'var(--surface)',
-                  border: '1px solid var(--line)',
-                  borderRadius: 'var(--radius-lg)',
-                }}
-              >
-                <b
-                  style={{
-                    font: 'var(--font-serif)',
-                    fontSize: 18,
-                    display: 'block',
-                    marginBottom: 8,
-                  }}
-                >
-                  Urgent Tender Assistance
-                </b>
-                <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.6 }}>
-                  Direct procurement desk:
-                  <br />
-                  <b>enterprise@pressandproof.in</b>
-                  <br />
-                  Mon–Fri · 9:00 AM – 7:00 PM IST
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
+          )}
+        </div>
+      </div>
 
       <Footer onNavigate={onNavigate} />
-    </>
+    </div>
   );
 }
+
+export default BulkQuotesView;

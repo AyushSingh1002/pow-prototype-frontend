@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { FileUp, Trash2, UploadCloud } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { UploadSlotConfig, UploadedSlotData } from '../../../lib/productUploadConfig';
 
 interface UploadSlotCardProps {
@@ -31,40 +31,49 @@ export function UploadSlotCard({
 }: UploadSlotCardProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    onDragOverChange(slot.id, true);
+  };
+
+  const handleDragLeave = () => {
+    onDragOverChange(slot.id, false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    onDragOverChange(slot.id, false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      onUpload(slot, e.dataTransfer.files[0]);
+    }
+  };
+
   return (
-    <div
-      className={index > 0 ? 'cover-upload-section' : undefined}
-      style={index > 0 ? { marginTop: 28 } : undefined}
-    >
-      <div style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <h3 style={{ fontSize: 18, margin: 0, color: 'var(--ink)' }}>{slot.title}</h3>
+    <div className="py-6 border-b border-[#CBD0DA]">
+      <div className="flex justify-between items-baseline mb-3">
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-bold text-[#0F1218]" style={{ fontFamily: 'var(--font-headline)' }}>
+            {slot.title}
+          </h3>
           <span
+            className="text-[11px] font-semibold uppercase px-2 py-0.5 border"
             style={{
-              fontSize: 10,
-              fontFamily: 'var(--font-mono)',
-              padding: '2px 6px',
-              borderRadius: 3,
-              backgroundColor: isRequired ? 'rgba(180, 83, 9, 0.12)' : 'var(--surface-hover)',
-              color: isRequired ? 'var(--amber)' : 'var(--muted)',
-              fontWeight: 600,
-              textTransform: 'uppercase',
+              borderColor: isRequired ? 'var(--key)' : 'var(--key-soft)',
+              color: isRequired ? 'var(--key)' : 'var(--key-soft)',
+              backgroundColor: isRequired ? 'var(--sheet)' : 'transparent',
             }}
           >
             {isRequired ? 'Required' : 'Optional'}
           </span>
         </div>
-        <p style={{ color: 'var(--muted)', fontSize: 13, margin: '4px 0 0' }}>{slot.subtitle}</p>
       </div>
+      <p className="reading-text-soft text-xs mb-4">{slot.subtitle}</p>
 
       <input
-        type="file"
         ref={inputRef}
-        style={{ display: 'none' }}
-        accept={slot.acceptedExtensions.join(',')}
-        onClick={(e) => {
-          (e.target as HTMLInputElement).value = '';
-        }}
+        type="file"
+        accept={slot.acceptedExtensions ? slot.acceptedExtensions.join(',') : '.pdf,.tiff,.jpg,.jpeg,.png'}
+        className="hidden"
         onChange={(e) => {
           if (e.target.files && e.target.files[0]) {
             onUpload(slot, e.target.files[0]);
@@ -72,185 +81,80 @@ export function UploadSlotCard({
         }}
       />
 
-      {!slotData ? (
-        <div
-          className={slot.role === 'cover' ? 'cover-dropzone' : 'dropzone'}
-          style={{
-            borderColor: isDragOver ? 'var(--navy)' : undefined,
-            backgroundColor: isDragOver ? 'var(--surface-hover)' : undefined,
-          }}
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault();
-            onDragOverChange(slot.id, true);
-          }}
-          onDragLeave={() => {
-            onDragOverChange(slot.id, false);
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            onDragOverChange(slot.id, false);
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-              onUpload(slot, e.dataTransfer.files[0]);
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
-        >
-          {slot.role === 'cover' || slot.role === 'secondary' ? (
-            <FileUp size={32} style={{ color: 'var(--muted)', marginBottom: 10 }} />
-          ) : (
-            <UploadCloud size={36} />
-          )}
-          <h4 style={{ fontSize: 15, margin: '0 0 6px', fontWeight: 600 }}>
-            {slot.dropzoneLabel}
-          </h4>
-          <p style={{ color: 'var(--muted)', fontSize: 12, margin: '0 0 14px' }}>
-            {slot.formatHelpText}
-          </p>
-          <button
-            className="btn btn-outline"
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              inputRef.current?.click();
-            }}
-          >
-            {isUploading ? 'Registering with backend...' : slot.buttonLabel}
-          </button>
-          {!isRequired && (
-            <p
-              style={{
-                fontSize: 11,
-                color: 'var(--muted)',
-                marginTop: 12,
-                marginBottom: 0,
-                fontStyle: 'italic',
-              }}
-            >
-              This slot is optional. If not uploaded, standard default layout will be used.
-            </p>
-          )}
+      {/* 5 Distinct Dropzone States: empty, dragging, uploading, uploaded, error */}
+      {isUploading ? (
+        /* State 3: Uploading with Registration Target */
+        <div className="p-8 border-2 border-dashed border-[#0F1218] bg-[#FDFDFC] flex flex-col items-center justify-center gap-3 text-center">
+          <span className="registration-target animating w-6 h-6" />
+          <span className="text-sm font-semibold text-[#0F1218]">
+            Preflight inspecting artwork...
+          </span>
+          <span className="text-xs text-[#5A6070]">
+            Validating trim box, bleed allowances and DPI metrics
+          </span>
         </div>
-      ) : (
-        <div className="uploaded-file">
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 4,
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'var(--surface-alt)',
-              border: '1px solid var(--line)',
-              flexShrink: 0,
-            }}
-          >
-            {slotData.previewUrl ? (
-              <img
-                src={slotData.previewUrl}
-                alt={`${slot.title} thumbnail`}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
-              <span
-                style={{
-                  fontSize: 10,
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 700,
-                  color: 'var(--ink)',
-                }}
-              >
-                {slotData.file.name.split('.').pop()?.toUpperCase() || 'FILE'}
-              </span>
-            )}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <b
-              style={{
-                display: 'block',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
+      ) : slotData?.file ? (
+        /* State 4: Uploaded */
+        <div className="p-5 border-2 border-[#0F1218] bg-white flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <span className="text-sm font-bold text-[#0F1218] block truncate max-w-md">
               {slotData.file.name}
-            </b>
-            <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--muted)' }}>
-              {(slotData.file.size / (1024 * 1024)).toFixed(2)} MB ·{' '}
-              {slotData.uploadResponse ? (
-                <span style={{ color: 'var(--success)', fontWeight: 600 }}>
-                  ✓ Registered with Backend
-                </span>
-              ) : (
-                <span style={{ color: 'var(--success)', fontWeight: 600 }}>✓ Ready for proof</span>
+            </span>
+            <div className="flex items-center gap-3 text-xs text-[#5A6070] font-mono">
+              <span>{(slotData.file.size / (1024 * 1024)).toFixed(2)} MB</span>
+              {slotData.metadata?.numPages !== undefined && (
+                <span>{slotData.metadata.numPages} pages detected</span>
               )}
-            </p>
-            {slotData.uploadResponse && (
-              <small
-                style={{
-                  font: 'var(--font-mono)',
-                  color: 'var(--muted)',
-                  fontSize: 10,
-                  display: 'block',
-                  marginTop: 2,
-                }}
-              >
-                Server File ID: {slotData.uploadResponse.fileId}
-              </small>
-            )}
+              <span className="text-[#00628F] font-sans font-semibold">Preflight passed</span>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+
+          <div className="flex items-center gap-3">
             <button
               type="button"
-              className="btn btn-outline"
-              style={{ padding: '6px 12px', fontSize: 11 }}
               onClick={() => inputRef.current?.click()}
+              className="btn-proof-secondary text-xs py-1.5 px-3"
             >
               Replace
             </button>
             <button
               type="button"
-              className="btn btn-ghost"
-              style={{
-                color: 'var(--rust)',
-                padding: '6px 10px',
-                fontSize: 11,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-              }}
-              onClick={() => {
-                onRemove(slot.id);
-                if (inputRef.current) inputRef.current.value = '';
-              }}
-              aria-label={`Remove ${slot.title}`}
+              onClick={() => onRemove(slot.id)}
+              className="p-2 border border-[#0F1218] hover:bg-[#FFF0F0] text-[#0F1218] cursor-pointer"
+              aria-label="Remove artwork"
             >
               <Trash2 size={14} />
-              <span>Remove</span>
             </button>
           </div>
         </div>
-      )}
-
-      {error && (
+      ) : (
+        /* State 1: Empty / State 2: Dragging / State 5: Error */
         <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => inputRef.current?.click()}
+          className="p-8 border-2 border-dashed cursor-pointer transition-colors duration-150 text-center flex flex-col items-center justify-center gap-2"
           style={{
-            backgroundColor: 'var(--warning-bg)',
-            border: '1px solid var(--warning-border)',
-            color: 'var(--rust)',
-            padding: '10px 14px',
-            borderRadius: 'var(--radius-md)',
-            marginTop: 10,
-            fontSize: 12,
+            borderColor: error ? 'var(--error)' : isDragOver ? 'var(--cyan)' : 'var(--key)',
+            backgroundColor: isDragOver ? '#F0F9FD' : error ? '#FFF5F5' : '#FDFDFC',
           }}
         >
-          {error}
+          <span className="text-sm font-bold text-[#0F1218]">
+            {isDragOver ? 'Release to upload artwork' : 'Drop artwork PDF here or click to select'}
+          </span>
+          <span className="text-xs text-[#5A6070]">
+            Accepts PDF/X-1a, TIFF or PNG up to 50MB. Minimum 300 DPI recommended with 3mm bleed.
+          </span>
+          {error && (
+            <div className="mt-2 text-xs font-semibold text-[#C4161C] border border-[#C4161C] p-2 bg-white">
+              {error}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
+
+export default UploadSlotCard;

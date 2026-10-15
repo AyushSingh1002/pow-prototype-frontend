@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowRight, CircleHelp } from 'lucide-react';
 import { QuoteResponse, Product, StorefrontPage } from '../../../types';
-import { money } from '../../../lib/formatters';
 import { CoverSpreadCalculation, ArtworkLayoutType } from '../../../lib/coverSpread';
 
 interface ProofSidebarProps {
@@ -28,106 +26,114 @@ export function ProofSidebar({
   quantity,
   interiorFile,
   coverFile,
-  effectiveLayout,
   spreadCalc,
   interiorPageCount,
   proofApproved,
   onSetProofApproved,
   onNavigate,
 }: ProofSidebarProps) {
+  const formatPrice = (paiseOrRupees: number) => {
+    const val = paiseOrRupees > 5000 ? Math.round(paiseOrRupees / 100) : paiseOrRupees;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(val);
+  };
+
   return (
-    <aside className="proof-side">
-      <div className="proof-order">
-        <p className="eyebrow" style={{ margin: 0 }}>
-          ACTIVE SERVER QUOTE
+    <aside className="proof-sheet p-6 border border-[#0F1218] bg-white sticky top-24 space-y-6">
+      {/* Header */}
+      <div className="border-b border-[#0F1218] pb-4">
+        <span className="sample-stamp">Sample price</span>
+        <h3 className="text-xl font-bold mt-2" style={{ fontFamily: 'var(--font-headline)' }}>
+          {product?.name || 'Custom Book'}
+        </h3>
+        <p className="text-xs text-[#5A6070] mt-1">
+          {quantity} copies · {interiorPageCount} pages
         </p>
-        <h3 style={{ fontSize: 24, margin: '6px 0 2px' }}>{product?.name || 'Custom Print'}</h3>
-        <p style={{ color: 'var(--muted)', fontSize: 12 }}>
-          {Object.entries(options)
-            .map(([k, v]) => `${k}: ${v}`)
-            .join(' · ')}
-        </p>
-        <dl>
-          <dt>Total copies</dt>
-          <dd>{quantity}</dd>
-          <dt>Interior file</dt>
-          <dd style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      </div>
+
+      {/* Specifications list */}
+      <div className="space-y-2.5 text-xs">
+        <div className="flex justify-between py-1 border-b border-[#CBD0DA]">
+          <span className="text-[#5A6070]">Calculated spine</span>
+          <span className="font-semibold text-[#0F1218] tabular-nums">
+            {spreadCalc?.spineWidthMm || 8.4} mm
+          </span>
+        </div>
+
+        <div className="flex justify-between py-1 border-b border-[#CBD0DA]">
+          <span className="text-[#5A6070]">Interior document</span>
+          <span className="font-semibold text-[#0F1218] truncate max-w-[150px]">
             {interiorFile?.name || 'Preflight PDF'}
-          </dd>
-          <dt>Cover artwork</dt>
-          <dd style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {coverFile ? coverFile.name : 'No cover artwork uploaded'}
-          </dd>
-          <dt>Cover layout</dt>
-          <dd style={{ font: 'var(--font-mono)', fontSize: 11 }}>
-            {coverFile
-              ? effectiveLayout === 'full-wrap'
-                ? 'Full-wrap spread'
-                : effectiveLayout === 'front-only'
-                ? 'Front cover only (unprinted back)'
-                : 'Cover artwork'
-              : 'Awaiting upload'}
-          </dd>
-          <dt>Estimated spine</dt>
-          <dd style={{ font: 'var(--font-mono)', fontSize: 11 }}>
-            ~{spreadCalc.spineWidthMm} mm ({interiorPageCount} pp)
-          </dd>
-          <dt>Backend Quote ID</dt>
-          <dd style={{ font: 'var(--font-mono)', fontSize: 10 }}>{quote?.id.slice(0, 16)}...</dd>
-          <dt>Server Total</dt>
-          <dd>{quote ? money(quote.total, true) : '₹0'}</dd>
-        </dl>
-        <div className="proof-total">
-          <span>Final Total</span>
-          <b>{quote ? money(quote.total, true) : '₹0'}</b>
+          </span>
+        </div>
+
+        <div className="flex justify-between py-1 border-b border-[#CBD0DA]">
+          <span className="text-[#5A6070]">Cover artwork</span>
+          <span className="font-semibold text-[#0F1218] truncate max-w-[150px]">
+            {coverFile?.name || 'Standard template'}
+          </span>
+        </div>
+
+        {Object.entries(options).map(([k, v]) => (
+          <div key={k} className="flex justify-between py-1 border-b border-[#CBD0DA]">
+            <span className="text-[#5A6070] capitalize">{k}</span>
+            <span className="font-semibold text-[#0F1218]">{v}</span>
+          </div>
+        ))}
+
+        <div className="flex justify-between items-baseline pt-3">
+          <span className="text-sm font-bold text-[#0F1218]">Sample total</span>
+          <span className="text-2xl font-extrabold tabular-nums text-[#0F1218]">
+            {formatPrice(quote?.total || 2631)}
+          </span>
         </div>
       </div>
 
-      <label className="confirm-check">
-        <input
-          type="checkbox"
-          checked={proofApproved}
-          onChange={(e) => onSetProofApproved(e.target.checked)}
-        />
-        <span>
-          I have inspected the specifications, bleeds, margins, and server quote breakdown.
-        </span>
-      </label>
+      {/* Approval Checkbox */}
+      <div className="p-3 bg-[#E8EAEE] border border-[#0F1218] space-y-2">
+        <label className="flex items-start gap-2.5 cursor-pointer text-xs">
+          <input
+            type="checkbox"
+            checked={proofApproved}
+            onChange={(e) => onSetProofApproved(e.target.checked)}
+            className="mt-0.5 accent-[#0A95D4]"
+          />
+          <span className="text-[#0F1218] leading-tight font-medium">
+            I have checked the trim, bleed margins and spine layout on this proof.
+          </span>
+        </label>
+      </div>
 
-      <div className="proof-actions">
+      {/* Approve proof Action button */}
+      <div className="space-y-3 pt-2">
         <button
-          className="btn btn-primary"
-          style={{ padding: '14px 20px', fontSize: 11 }}
-          disabled={!proofApproved || !quote}
+          className="btn-proof-primary w-full py-3.5 text-sm"
+          disabled={!proofApproved}
           onClick={() => {
             onSetProofApproved(true);
             onNavigate('checkout');
           }}
         >
-          Approve proof &amp; proceed to checkout <ArrowRight size={14} />
+          {proofApproved ? 'Proof approved — Continue to checkout' : 'Approve proof'}
         </button>
-        <button className="btn btn-outline" onClick={() => onNavigate('upload')}>
-          Replace file
+
+        <button
+          type="button"
+          onClick={() => onNavigate('upload')}
+          className="btn-proof-secondary w-full py-2.5 text-xs"
+        >
+          Replace artwork file
         </button>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: 10,
-          color: 'var(--muted)',
-          fontSize: 11,
-          borderTop: '1px solid var(--line)',
-          paddingTop: 16,
-        }}
-      >
-        <CircleHelp size={16} style={{ flexShrink: 0 }} />
-        <span>
-          <b>Server Quote Verification:</b>
-          <br />
-          This quote was verified against pricing matrix version {quote?.pricingConfigVersion}.
-        </span>
-      </div>
+      <p className="text-[11px] text-[#5A6070] text-center pt-2 border-t border-[#CBD0DA]">
+        Sample proof simulation. No production plates are imaged.
+      </p>
     </aside>
   );
 }
+
+export default ProofSidebar;

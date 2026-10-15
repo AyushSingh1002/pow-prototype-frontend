@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowRight, Check, LogOut, X } from 'lucide-react';
+import { LogOut, X } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 
 interface SignInModalProps {
@@ -36,61 +36,56 @@ export function SignInModal({
   if (!isOpen) return null;
 
   const demoAccounts = [
-    { id: 'demo-token', name: 'Demo Customer (Standard)', role: 'Standard Account' },
+    { id: 'demo-token', name: 'Standard Demo Account', role: 'Standard Account' },
     {
       id: 'cust_author_42',
-      name: 'Author Account (cust_author_42)',
+      name: 'Author & Self-Publisher',
       role: 'Independent Publisher',
     },
     {
       id: 'cust_business_07',
-      name: 'Enterprise Corporate (cust_business_07)',
+      name: 'Corporate Commercial Client',
       role: 'Commercial Print Client',
     },
   ];
 
   return (
-    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose} aria-label="Close dialog">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-none"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="proof-sheet p-8 border-2 border-[#0F1218] bg-white max-w-lg w-full relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 p-1.5 cursor-pointer bg-transparent border-0 text-[#0F1218]"
+          aria-label="Close dialog"
+        >
           <X size={20} />
         </button>
 
-        <p className="eyebrow">CUSTOMER AUTHENTICATION</p>
-        <h2 style={{ fontSize: 28, marginBottom: 8 }}>Sign in to Press &amp; Proof</h2>
-        <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 24 }}>
-          Access authenticated draft order conversion and encrypted status audit records.
+        <span className="sample-stamp">Prototype auth</span>
+        <h2 className="text-2xl font-bold mt-2" style={{ fontFamily: 'var(--font-headline)' }}>
+          Customer Sign In
+        </h2>
+        <p className="reading-text-soft text-xs mt-1 mb-6">
+          Access draft quotes, saved addresses and order tracking profiles.
         </p>
 
         {currentUser && (
-          <div
-            style={{
-              padding: 14,
-              backgroundColor: 'var(--success-bg)',
-              border: '1px solid var(--success-border)',
-              borderRadius: 'var(--radius-md)',
-              marginBottom: 20,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
+          <div className="p-3 bg-[#E8EAEE] border border-[#0F1218] mb-6 flex justify-between items-center">
             <div>
-              <small
-                style={{
-                  font: 'var(--font-mono)',
-                  fontSize: 10,
-                  color: 'var(--success)',
-                  display: 'block',
-                }}
-              >
-                CURRENTLY SIGNED IN AS
-              </small>
-              <b style={{ color: 'var(--ink)' }}>{currentUser}</b>
+              <span className="text-[10px] text-[#5A6070] uppercase font-semibold block">
+                Signed in as
+              </span>
+              <span className="font-bold text-sm text-[#0F1218]">{currentUser}</span>
             </div>
             <button
-              className="btn btn-outline"
-              style={{ padding: '6px 12px' }}
+              className="btn-proof-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
               onClick={() => onSelectUser(null)}
             >
               <LogOut size={13} /> Sign out
@@ -98,70 +93,53 @@ export function SignInModal({
           </div>
         )}
 
-        <div
-          style={{
-            display: 'flex',
-            gap: 8,
-            borderBottom: '1px solid var(--line)',
-            marginBottom: 20,
-          }}
-        >
+        <div className="flex border-b border-[#0F1218] mb-6">
           <button
-            className={`btn ${activeTab === 'demo' ? 'btn-primary' : 'btn-ghost'}`}
-            style={{ padding: '8px 14px', fontSize: 11 }}
+            className="pb-2 text-xs font-semibold cursor-pointer bg-transparent border-0 transition-colors mr-6"
+            style={{
+              color: activeTab === 'demo' ? '#0F1218' : '#5A6070',
+              borderBottom: activeTab === 'demo' ? '2px solid #0F1218' : '2px solid transparent',
+            }}
             onClick={() => setActiveTab('demo')}
           >
-            Quick Demo Profiles
+            Demo profiles
           </button>
           <button
-            className={`btn ${activeTab === 'email' ? 'btn-primary' : 'btn-ghost'}`}
-            style={{ padding: '8px 14px', fontSize: 11 }}
+            className="pb-2 text-xs font-semibold cursor-pointer bg-transparent border-0 transition-colors"
+            style={{
+              color: activeTab === 'email' ? '#0F1218' : '#5A6070',
+              borderBottom: activeTab === 'email' ? '2px solid #0F1218' : '2px solid transparent',
+            }}
             onClick={() => setActiveTab('email')}
           >
-            Email &amp; Password
+            Email login
           </button>
         </div>
 
         {activeTab === 'demo' ? (
-          <div>
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 14 }}>
-              Select a simulated bearer profile supported by the Express backend auth middleware:
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {demoAccounts.map((acc) => (
-                <button
-                  key={acc.id}
-                  style={{
-                    padding: '12px 16px',
-                    border: '1px solid var(--line)',
-                    borderRadius: 'var(--radius-md)',
-                    backgroundColor:
-                      currentUser === acc.id ? 'var(--info-bg)' : 'var(--surface)',
-                    borderColor: currentUser === acc.id ? 'var(--navy)' : 'var(--line)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    textAlign: 'left',
-                  }}
-                  onClick={() => {
-                    onSelectUser(acc.id);
-                    onClose();
-                  }}
-                >
-                  <div>
-                    <b style={{ display: 'block', fontSize: 13, color: 'var(--ink)' }}>
-                      {acc.name}
-                    </b>
-                    <small
-                      style={{ color: 'var(--muted)', font: 'var(--font-mono)', fontSize: 10 }}
-                    >
-                      Token: {acc.id} · {acc.role}
-                    </small>
-                  </div>
-                  {currentUser === acc.id && <Check size={16} color="var(--navy)" />}
-                </button>
-              ))}
-            </div>
+          <div className="space-y-3">
+            {demoAccounts.map((acc) => (
+              <button
+                key={acc.id}
+                onClick={() => {
+                  onSelectUser(acc.id);
+                  onClose();
+                }}
+                className="w-full p-3.5 border border-[#0F1218] text-left cursor-pointer transition-colors flex justify-between items-center bg-white hover:bg-[#F9FAFC]"
+                style={{
+                  backgroundColor: currentUser === acc.id ? '#F0F9FD' : 'white',
+                  borderColor: currentUser === acc.id ? '#0A95D4' : '#0F1218',
+                }}
+              >
+                <div>
+                  <span className="text-sm font-bold block text-[#0F1218]">{acc.name}</span>
+                  <span className="text-[11px] text-[#5A6070] block">{acc.role}</span>
+                </div>
+                {currentUser === acc.id && (
+                  <span className="text-xs font-bold text-[#00628F]">Active</span>
+                )}
+              </button>
+            ))}
           </div>
         ) : (
           <form
@@ -172,62 +150,36 @@ export function SignInModal({
                 onClose();
               }
             }}
-            style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+            className="space-y-4 text-xs"
           >
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  font: 'var(--font-mono)',
-                  fontSize: 10,
-                  marginBottom: 6,
-                }}
-              >
-                EMAIL ADDRESS
+              <label className="font-semibold text-[#0F1218] block mb-1">
+                Email address
               </label>
               <input
                 type="email"
                 required
-                placeholder="editor@pressandproof.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  border: '1px solid var(--line)',
-                  borderRadius: 'var(--radius-sm)',
-                  backgroundColor: 'var(--surface)',
-                }}
+                placeholder="editor@pressandproof.in"
+                className="w-full p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm"
               />
             </div>
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  font: 'var(--font-mono)',
-                  fontSize: 10,
-                  marginBottom: 6,
-                }}
-              >
-                PASSWORD
+              <label className="font-semibold text-[#0F1218] block mb-1">
+                Password
               </label>
               <input
                 type="password"
                 required
-                placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  border: '1px solid var(--line)',
-                  borderRadius: 'var(--radius-sm)',
-                  backgroundColor: 'var(--surface)',
-                }}
+                placeholder="••••••••••••"
+                className="w-full p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm"
               />
             </div>
-            <button className="btn btn-primary" type="submit" style={{ marginTop: 8 }}>
-              Sign In to Account <ArrowRight size={14} />
+            <button type="submit" className="btn-proof-primary w-full py-3 text-sm mt-2">
+              Sign in
             </button>
           </form>
         )}
@@ -235,3 +187,5 @@ export function SignInModal({
     </div>
   );
 }
+
+export default SignInModal;

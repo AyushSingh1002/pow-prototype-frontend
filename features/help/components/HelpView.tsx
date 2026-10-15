@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronRight, FileText, Layers, ShieldCheck, Truck } from 'lucide-react';
+import React from 'react';
 import { StorefrontPage } from '../../../types';
 import { useOrderFlow } from '../../../context/OrderFlowContext';
 import { Footer } from '../../../components/layout/Footer';
@@ -14,260 +13,58 @@ export function HelpView({ onNavigate: propNavigate }: HelpViewProps) {
   const { navigate: contextNavigate } = useOrderFlow();
   const onNavigate = propNavigate || contextNavigate;
 
-  const [activeTab, setActiveTab] = useState<'prep' | 'paper' | 'shipping' | 'api'>('prep');
-
   return (
-    <>
-      <div className="page-intro">
-        <div className="breadcrumbs">
-          <button onClick={() => onNavigate('home')}>Home</button>
-          <ChevronRight size={13} />
-          <span>Help &amp; Specifications</span>
+    <div className="w-full">
+      <div className="proof-container py-8 md:py-16">
+        <div className="border-b border-[#0F1218] pb-4 mb-8">
+          <div className="flex justify-between items-baseline flex-wrap gap-2">
+            <h1>Pre-Press Specifications</h1>
+            <span className="sample-stamp">Sample specifications</span>
+          </div>
+          <p className="reading-text-soft text-sm mt-1">
+            Reference metrics for bleed margins, spine thickness calculation and paper bulk densities. Every figure below is an illustrative sample.
+          </p>
         </div>
-        <p className="eyebrow">PRE-PRESS DOCUMENTATION</p>
-        <h1>Help Centre &amp; Print Guidelines</h1>
-        <p>Artwork preparation specs, paper GSM metrics, binding styles, and technical architecture.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          {/* Section 1: Artwork Geometry */}
+          <div className="proof-sheet p-8 border border-[#0F1218] bg-white space-y-4">
+            <span className="sample-stamp">Sample metrics</span>
+            <h2 className="text-xl font-bold" style={{ fontFamily: 'var(--font-headline)' }}>
+              1. Bleed &amp; Safety Margins
+            </h2>
+            <p className="reading-text text-sm">
+              All edge-to-edge artwork requires a 3.0mm external bleed allowance (sample specification). Text and critical illustrations must sit at least 5.0mm inside the trim line to prevent edge cropping during 3-knife trimming passes.
+            </p>
+            <div className="p-4 bg-[#E8EAEE] border border-[#0F1218] text-xs font-mono space-y-1">
+              <div>A5 Trim Box: 148 × 210 mm (Sample specification)</div>
+              <div>A5 Bleed Box: 154 × 216 mm (Sample specification)</div>
+              <div>Resolution minimum: 300 DPI at 100% scale (Sample check)</div>
+            </div>
+          </div>
+
+          {/* Section 2: Spine Thickness Matrix */}
+          <div className="proof-sheet p-8 border border-[#0F1218] bg-white space-y-4">
+            <span className="sample-stamp">Sample formula</span>
+            <h2 className="text-xl font-bold" style={{ fontFamily: 'var(--font-headline)' }}>
+              2. Spine Width Calculation
+            </h2>
+            <p className="reading-text text-sm">
+              Spine thickness in perfect bound and hardcover volumes depends on paper caliper (GSM) and page count.
+            </p>
+            <div className="p-4 bg-[#E8EAEE] border border-[#0F1218] text-xs font-mono space-y-1">
+              <div>80 GSM Natural White: ~0.052mm per page (Sample specification)</div>
+              <div>100 GSM Bond Paper: ~0.065mm per page (Sample specification)</div>
+              <div>Hardcover board allowance: +3.0mm hinge add-on (Sample specification)</div>
+              <div>Saddle stitch limit: Maximum 64 pages (Sample restriction)</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <main className="section" style={{ maxWidth: 960 }}>
-        <div
-          style={{
-            display: 'flex',
-            gap: 8,
-            borderBottom: '1px solid var(--line)',
-            paddingBottom: 12,
-            marginBottom: 30,
-            flexWrap: 'wrap',
-          }}
-        >
-          {[
-            { id: 'prep', label: 'File Preparation Guide', icon: FileText },
-            { id: 'paper', label: 'Paper & Binding Specs', icon: Layers },
-            { id: 'shipping', label: 'Shipping & Delivery', icon: Truck },
-            { id: 'api', label: 'API Architecture & Tests', icon: ShieldCheck },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                className={`btn ${activeTab === tab.id ? 'btn-primary' : 'btn-outline'}`}
-                onClick={() => setActiveTab(tab.id as any)}
-                style={{ padding: '8px 14px', fontSize: 11 }}
-              >
-                <Icon size={14} /> {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {activeTab === 'prep' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div
-              style={{
-                padding: 28,
-                backgroundColor: 'var(--surface)',
-                border: '1px solid var(--line)',
-                borderRadius: 'var(--radius-lg)',
-              }}
-            >
-              <h2 style={{ fontSize: 24, marginBottom: 12 }}>Pre-Press File Preparation Checklist</h2>
-              <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 20 }}>
-                Follow these parameters to guarantee crisp printing, accurate colors, and zero
-                clipping during trimming.
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-                <div
-                  style={{
-                    padding: 16,
-                    backgroundColor: 'var(--paper)',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--line)',
-                  }}
-                >
-                  <b>1. Bleed Margins (3mm)</b>
-                  <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
-                    Extend all background graphics and imagery 3mm beyond the final trim line to
-                    prevent white gaps during trimming.
-                  </p>
-                </div>
-                <div
-                  style={{
-                    padding: 16,
-                    backgroundColor: 'var(--paper)',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--line)',
-                  }}
-                >
-                  <b>2. CMYK Color Profile</b>
-                  <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
-                    Convert all RGB assets to CMYK (FOGRA39 or Coated GRACoL) before exporting to
-                    avoid unexpected shifts in saturation.
-                  </p>
-                </div>
-                <div
-                  style={{
-                    padding: 16,
-                    backgroundColor: 'var(--paper)',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--line)',
-                  }}
-                >
-                  <b>3. Image Resolution (300 DPI)</b>
-                  <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
-                    All continuous-tone photographic images should have an effective resolution of at
-                    least 300 DPI at 100% scale.
-                  </p>
-                </div>
-                <div
-                  style={{
-                    padding: 16,
-                    backgroundColor: 'var(--paper)',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--line)',
-                  }}
-                >
-                  <b>4. Font Embedding &amp; Outlining</b>
-                  <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
-                    Embed all font subsets in the exported PDF or convert rare typography to vector
-                    curves/outlines.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'paper' && (
-          <div
-            style={{
-              padding: 28,
-              backgroundColor: 'var(--surface)',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--radius-lg)',
-            }}
-          >
-            <h2 style={{ fontSize: 24, marginBottom: 16 }}>Paper Weights &amp; Binding Guide</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <b>80 GSM Natural White (Book Text)</b>
-                <p style={{ color: 'var(--muted)', fontSize: 13 }}>
-                  Uncoated warm book paper ideal for long-form reading, novels, and non-fiction.
-                </p>
-              </div>
-              <div>
-                <b>130 GSM Art Matte (Catalogues &amp; Photo Albums)</b>
-                <p style={{ color: 'var(--muted)', fontSize: 13 }}>
-                  Smooth coated paper with zero glare, delivering vivid color reproduction.
-                </p>
-              </div>
-              <div>
-                <b>350 GSM Velvet Premium Card (Visiting Cards)</b>
-                <p style={{ color: 'var(--muted)', fontSize: 13 }}>
-                  Rigid cardstock ideal for thermal matte lamination, spot UV, and tactile finishes.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'shipping' && (
-          <div
-            style={{
-              padding: 28,
-              backgroundColor: 'var(--surface)',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--radius-lg)',
-            }}
-          >
-            <h2 style={{ fontSize: 24, marginBottom: 16 }}>Turnaround &amp; Pan-India Delivery</h2>
-            <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 20 }}>
-              Orders are dispatched from our automated hubs in Mumbai, Bengaluru, and New Delhi.
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-              <div
-                style={{
-                  padding: 16,
-                  backgroundColor: 'var(--paper)',
-                  borderRadius: 'var(--radius-md)',
-                }}
-              >
-                <b>Metro Cities</b>
-                <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
-                  1–2 business days via express air courier.
-                </p>
-              </div>
-              <div
-                style={{
-                  padding: 16,
-                  backgroundColor: 'var(--paper)',
-                  borderRadius: 'var(--radius-md)',
-                }}
-              >
-                <b>Tier 2 &amp; 3 Hubs</b>
-                <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
-                  2–4 business days with end-to-end tracking.
-                </p>
-              </div>
-              <div
-                style={{
-                  padding: 16,
-                  backgroundColor: 'var(--paper)',
-                  borderRadius: 'var(--radius-md)',
-                }}
-              >
-                <b>Bulk Freight</b>
-                <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>
-                  Scheduled pallet delivery with lift-gate assistance.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'api' && (
-          <div
-            style={{
-              padding: 28,
-              backgroundColor: 'var(--surface)',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--radius-lg)',
-            }}
-          >
-            <h2 style={{ fontSize: 24, marginBottom: 12 }}>Architecture &amp; Quality Gates</h2>
-            <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 16 }}>
-              The backend prototype strictly separates computation from display to ensure
-              enterprise auditability.
-            </p>
-            <ul
-              style={{
-                color: 'var(--muted)',
-                fontSize: 13,
-                lineHeight: 1.8,
-                paddingLeft: 18,
-              }}
-            >
-              <li>
-                <b>Zero Client-Side Math:</b> All money amounts are calculated strictly in integer
-                minor units (paise).
-              </li>
-              <li>
-                <b>Single-Pass Rounding:</b> Exactly one <code>Math.round</code> applied once per
-                line item calculation.
-              </li>
-              <li>
-                <b>54 Passing Tests:</b> 100% test coverage across pricing engine, state machine,
-                idempotency, and upload stubs.
-              </li>
-              <li>
-                <b>Cryptographic Expiry:</b> Quotes expire deterministically after 30 minutes,
-                preventing stale price locks.
-              </li>
-            </ul>
-          </div>
-        )}
-      </main>
-
       <Footer onNavigate={onNavigate} />
-    </>
+    </div>
   );
 }
+
+export default HelpView;

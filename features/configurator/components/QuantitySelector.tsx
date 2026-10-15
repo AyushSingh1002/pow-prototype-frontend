@@ -6,64 +6,84 @@ import { Product } from '../../../types';
 
 interface QuantitySelectorProps {
   quantity: number;
-  stepNumber: number;
-  product: Product;
+  stepNumber?: number;
+  product?: Product;
   onChange: (qty: number) => void;
 }
 
 export function QuantitySelector({
   quantity,
-  stepNumber,
   product,
   onChange,
 }: QuantitySelectorProps) {
-  const minQty = product.minQuantity || 1;
-  const maxQty = product.maxQuantity || 5000;
+  const minQty = product?.minQuantity || 1;
+  const maxQty = product?.maxQuantity || 5000;
 
-  const presets = [10, 25, 50, 100, 250, 500, 1000].filter(
+  const presets = [10, 25, 50, 100, 250, 500].filter(
     (q) => q >= minQty && q <= maxQty
   );
 
   return (
-    <div className="config-step">
-      <span>
-        {stepNumber}. QUANTITY (MIN {minQty} · MAX {maxQty})
-      </span>
-      <div className="quantity-wrapper">
-        <div className="quantity">
+    <div>
+      <div className="flex justify-between items-baseline mb-4">
+        <label className="text-base font-bold text-[#0F1218]" style={{ fontFamily: 'var(--font-headline)' }}>
+          Order quantity
+        </label>
+        <span className="text-xs text-[#5A6070]">
+          Bulk discounts factored in real time
+        </span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-4">
+        {/* Number Stepper */}
+        <div className="inline-flex items-center border border-[#0F1218] bg-white rounded-[var(--control-radius)] p-1">
           <button
+            type="button"
             onClick={() => onChange(Math.max(minQty, quantity - 5))}
             disabled={quantity <= minQty}
-            aria-label="Decrease quantity"
+            className="w-8 h-8 flex items-center justify-center cursor-pointer bg-transparent border-0 hover:bg-[#E8EAEE] disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Decrease copies"
           >
-            <Minus size={15} />
+            <Minus size={14} />
           </button>
-          <b>{quantity}</b>
+          <span className="w-16 text-center font-bold text-base tabular-nums text-[#0F1218]">
+            {quantity}
+          </span>
           <button
+            type="button"
             onClick={() => onChange(Math.min(maxQty, quantity + 5))}
             disabled={quantity >= maxQty}
-            aria-label="Increase quantity"
+            className="w-8 h-8 flex items-center justify-center cursor-pointer bg-transparent border-0 hover:bg-[#E8EAEE] disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Increase copies"
           >
-            <Plus size={15} />
+            <Plus size={14} />
           </button>
-          <span>Copies</span>
         </div>
 
-        <div className="preset-chips">
-          {presets.map((val) => (
-            <button
-              key={val}
-              className={`preset-chip ${quantity === val ? 'active' : ''}`}
-              onClick={() => onChange(val)}
-            >
-              {val} copies
-            </button>
-          ))}
+        {/* Preset options */}
+        <div className="flex flex-wrap items-center gap-2">
+          {presets.map((val) => {
+            const isSelected = quantity === val;
+            return (
+              <button
+                key={val}
+                type="button"
+                onClick={() => onChange(val)}
+                className="px-3 py-1.5 text-xs font-semibold tabular-nums border cursor-pointer transition-all duration-150 rounded-[var(--control-radius)]"
+                style={{
+                  backgroundColor: isSelected ? 'var(--key)' : 'var(--sheet)',
+                  color: isSelected ? 'var(--sheet)' : 'var(--key)',
+                  borderColor: 'var(--key)',
+                }}
+              >
+                {val} copies
+              </button>
+            );
+          })}
         </div>
-        <small style={{ color: 'var(--muted)', fontSize: 11 }}>
-          Bulk discount tiers are automatically calculated server-side based on quantity breaks.
-        </small>
       </div>
     </div>
   );
 }
+
+export default QuantitySelector;

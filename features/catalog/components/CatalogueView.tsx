@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { ChevronRight, Search } from 'lucide-react';
 import { Product, StorefrontPage } from '../../../types';
 import { useOrderFlow } from '../../../context/OrderFlowContext';
-import { ProductCard } from './ProductCard';
 import { Footer } from '../../../components/layout/Footer';
 
 interface CatalogueViewProps {
@@ -28,183 +26,223 @@ export function CatalogueView({
   const onNavigate = propNavigate || contextNavigate;
   const onSelectProduct = propSelectProduct || contextSelectProduct;
 
-  const [filter, setFilter] = useState('All');
-  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState<'default' | 'asc' | 'desc'>('default');
-  const [pin, setPin] = useState('');
-  const [pinMessage, setPinMessage] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const categories = useMemo(() => {
-    const set = new Set(products.map((p) => p.category));
-    return ['All', ...Array.from(set)];
+    const set = new Set(products.map((p) => p.category.toLowerCase()));
+    return ['all', ...Array.from(set)];
   }, [products]);
 
   const filtered = useMemo(() => {
     let list =
-      filter === 'All'
+      categoryFilter === 'all'
         ? products
-        : products.filter((p) => p.category.toLowerCase() === filter.toLowerCase());
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
-      );
-    }
+        : products.filter((p) => p.category.toLowerCase() === categoryFilter.toLowerCase());
+
     if (sortOrder === 'asc') {
-      list = [...list].sort((a, b) => a.sampleStartingPrice - b.sampleStartingPrice);
+      list = [...list].sort((a, b) => (a.sampleStartingPrice || 0) - (b.sampleStartingPrice || 0));
     } else if (sortOrder === 'desc') {
-      list = [...list].sort((a, b) => b.sampleStartingPrice - a.sampleStartingPrice);
+      list = [...list].sort((a, b) => (b.sampleStartingPrice || 0) - (a.sampleStartingPrice || 0));
     }
     return list;
-  }, [products, filter, search, sortOrder]);
+  }, [products, categoryFilter, sortOrder]);
 
-  const handlePinCheck = () => {
-    if (pin.length === 6 && /^\d+$/.test(pin)) {
-      setPinMessage(`✓ Delivery available for PIN ${pin}: Estimated delivery in 2–3 business days`);
-    } else {
-      setPinMessage('Please enter a valid 6-digit Indian PIN code.');
-    }
+  const formatPrice = (paiseOrRupees: number) => {
+    const val = paiseOrRupees > 5000 ? Math.round(paiseOrRupees / 100) : paiseOrRupees;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(val);
   };
 
   return (
-    <>
-      <div className="page-intro">
-        <div className="breadcrumbs">
-          <button onClick={() => onNavigate('home')}>Home</button>
-          <ChevronRight size={13} />
-          <span>Products</span>
-        </div>
-        <p className="eyebrow">API PRODUCT CATALOGUE</p>
-        <h1>
-          High-quality printing
-          <br />
-          for every need.
-        </h1>
-        <p>Browse standard and custom print products connected to our live pricing matrix.</p>
-      </div>
-
-      <main className="catalogue">
-        <aside className="filters">
-          <b>PRODUCT CATEGORIES</b>
-          {categories.map((c) => (
-            <button
-              className={filter === c ? 'active' : ''}
-              onClick={() => setFilter(c)}
-              key={c}
-            >
-              <span style={{ textTransform: 'capitalize' }}>{c}</span>
-              <span>
-                {c === 'All'
-                  ? products.length
-                  : products.filter((p) => p.category.toLowerCase() === c.toLowerCase()).length}
-              </span>
-            </button>
-          ))}
-
-          <b className="filter-label">DELIVERY BY PIN CODE</b>
-          <p style={{ color: 'var(--muted)', fontSize: 12, margin: '4px 0 8px' }}>
-            Check courier lead times for your delivery area.
+    <div className="w-full">
+      <div className="proof-container py-8 md:py-16">
+        <div className="border-b border-[#0F1218] pb-4 mb-8">
+          <div className="flex justify-between items-baseline flex-wrap gap-2">
+            <h1>Product Catalogue</h1>
+            <span className="sample-stamp">Sample starting prices</span>
+          </div>
+          <p className="reading-text-soft text-sm mt-1">
+            Browse standard formats, binding specifications and starting production tiers.
           </p>
-          <div className="pin-input">
-            <input
-              placeholder="e.g. 400001"
-              value={pin}
-              maxLength={6}
-              onChange={(e) => setPin(e.target.value)}
-              aria-label="Enter PIN code"
-            />
-            <button onClick={handlePinCheck}>CHECK</button>
-          </div>
-          {pinMessage && (
-            <small
-              style={{
-                color: pinMessage.startsWith('✓') ? 'var(--success)' : 'var(--rust)',
-                marginTop: 8,
-                display: 'block',
-              }}
+        </div>
+
+        {/* Filters written as a natural sentence & View mode toggle */}
+        <div className="proof-sheet p-6 border border-[#0F1218] bg-white mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-[#0F1218]">
+            <span>Showing</span>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="p-1.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white font-semibold cursor-pointer"
             >
-              {pinMessage}
-            </small>
-          )}
-        </aside>
+              <option value="all">all products</option>
+              {categories.filter((c) => c !== 'all').map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
 
-        <div className="catalogue-content">
-          <div className="catalogue-toolbar">
-            <div className="search-input-wrapper">
-              <Search size={14} />
-              <input
-                placeholder="Search products..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span>{filtered.length} products found</span>
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as any)}
-                style={{
-                  border: '1px solid var(--line)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '6px 10px',
-                  backgroundColor: 'var(--surface)',
-                  fontSize: 11,
-                  fontFamily: 'var(--font-mono)',
-                }}
-              >
-                <option value="default">Sort: Recommended</option>
-                <option value="asc">Price: Low to High</option>
-                <option value="desc">Price: High to Low</option>
-              </select>
-            </div>
+            <span>sorted by</span>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as any)}
+              className="p-1.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white font-semibold cursor-pointer"
+            >
+              <option value="default">standard catalogue order</option>
+              <option value="asc">lowest starting price</option>
+              <option value="desc">highest starting price</option>
+            </select>
           </div>
 
-          {filtered.length === 0 ? (
-            <div
+          <div className="inline-flex border border-[#0F1218] rounded-[var(--control-radius)] p-0.5 bg-[#E8EAEE] self-start md:self-auto">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className="px-3 py-1 text-xs font-semibold cursor-pointer transition-colors"
               style={{
-                padding: '60px 20px',
-                textAlign: 'center',
-                backgroundColor: 'var(--surface)',
-                borderRadius: 'var(--radius-lg)',
-                marginTop: 30,
-                border: '1px solid var(--line)',
+                backgroundColor: viewMode === 'list' ? 'var(--key)' : 'transparent',
+                color: viewMode === 'list' ? 'var(--sheet)' : 'var(--key)',
               }}
             >
-              <h3>No products matched your search.</h3>
-              <p style={{ color: 'var(--muted)', marginTop: 8 }}>
-                Try clearing filters or search terms.
-              </p>
+              List index
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className="px-3 py-1 text-xs font-semibold cursor-pointer transition-colors"
+              style={{
+                backgroundColor: viewMode === 'grid' ? 'var(--key)' : 'transparent',
+                color: viewMode === 'grid' ? 'var(--sheet)' : 'var(--key)',
+              }}
+            >
+              Grid tiles
+            </button>
+          </div>
+        </div>
+
+        {/* Content Section */}
+        {filtered.length === 0 ? (
+          /* Empty state */
+          <div className="proof-sheet p-12 border border-[#0F1218] text-center max-w-xl mx-auto space-y-4">
+            <span className="sample-stamp">Zero matches</span>
+            <h3 className="text-xl font-bold">Nothing matches your filters. Clear them or ask for a custom quote.</h3>
+            <p className="reading-text-soft text-sm">
+              We print bespoke specifications for books, booklets, collateral and packaging beyond the standard catalogue.
+            </p>
+            <div className="flex justify-center gap-4 pt-2">
               <button
-                className="btn btn-outline"
-                style={{ marginTop: 16 }}
+                type="button"
                 onClick={() => {
-                  setFilter('All');
-                  setSearch('');
+                  setCategoryFilter('all');
+                  setSortOrder('default');
                 }}
+                className="btn-proof-secondary text-xs"
               >
-                Reset filters
+                Clear filters
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('bulk')}
+                className="btn-proof-primary text-xs"
+              >
+                Request custom quote
               </button>
             </div>
-          ) : (
-            <div className="catalogue-grid" style={{ marginTop: 30 }}>
-              {filtered.map((p, i) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  index={i}
-                  onClick={() => {
-                    onSelectProduct(p.id);
-                    onNavigate('configurator');
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
+          </div>
+        ) : viewMode === 'list' ? (
+          /* Default View: Product Index List */
+          <div className="proof-sheet border border-[#0F1218] bg-white divide-y divide-[#CBD0DA]">
+            {filtered.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => {
+                  onSelectProduct?.(p.id);
+                  onNavigate('configurator');
+                }}
+                className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer hover:bg-[#F9FAFC] transition-colors group"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-xl font-bold text-[#0F1218] group-hover:text-[#00628F]" style={{ fontFamily: 'var(--font-headline)' }}>
+                      {p.name}
+                    </h3>
+                    <span className="text-[10px] text-[#5A6070] uppercase font-semibold border border-[#CBD0DA] px-2 py-0.5">
+                      {p.category}
+                    </span>
+                  </div>
+                  <p className="reading-text-soft text-sm max-w-2xl line-clamp-1">
+                    {p.description}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-6 shrink-0">
+                  <div className="text-right">
+                    <span className="sample-stamp text-[9px] mb-1">Sample price</span>
+                    <span className="text-lg font-bold tabular-nums block text-[#0F1218]">
+                      From {formatPrice(p.sampleStartingPrice || 250)}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-proof-secondary text-xs py-2 px-4"
+                  >
+                    Configure
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Optional Grid View */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => {
+                  onSelectProduct?.(p.id);
+                  onNavigate('configurator');
+                }}
+                className="proof-sheet p-6 border border-[#0F1218] bg-white flex flex-col justify-between cursor-pointer hover:border-black transition-all"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="text-[10px] text-[#5A6070] uppercase font-semibold border border-[#CBD0DA] px-2 py-0.5">
+                      {p.category}
+                    </span>
+                    <span className="sample-stamp">Sample price</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-[#0F1218] mb-2" style={{ fontFamily: 'var(--font-headline)' }}>
+                    {p.name}
+                  </h3>
+                  <p className="reading-text-soft text-xs line-clamp-2">
+                    {p.description}
+                  </p>
+                </div>
+
+                <div className="pt-6 mt-6 border-t border-[#CBD0DA] flex items-center justify-between">
+                  <span className="text-base font-bold tabular-nums text-[#0F1218]">
+                    From {formatPrice(p.sampleStartingPrice || 250)}
+                  </span>
+                  <button type="button" className="btn-proof-secondary text-xs py-1.5 px-3">
+                    Configure
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <Footer onNavigate={onNavigate} />
-    </>
+    </div>
   );
 }
+
+export default CatalogueView;

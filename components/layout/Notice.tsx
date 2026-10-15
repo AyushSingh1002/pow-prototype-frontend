@@ -1,34 +1,22 @@
 'use client';
 
 import React from 'react';
-import { useOrderFlow } from '../../context/OrderFlowContext';
-import { BackendHealthState } from '../../types';
 
-interface NoticeProps {
-  backendHealth?: BackendHealthState;
-}
-
-export function Notice({ backendHealth: propHealth }: NoticeProps) {
-  const { backendHealth: contextHealth } = useOrderFlow();
-  const backendHealth = propHealth || contextHealth;
-
-  if (backendHealth.connected) {
-    return (
-      <aside className="notice-bar" role="status" aria-live="polite">
-        <span>
-          <b>Live Server Pricing Engine:</b> Connected to Express backend (Pricing Matrix v
-          {backendHealth.version}). Integer minor unit (paise) calculation active.
-        </span>
-      </aside>
-    );
-  }
-
+export function Notice() {
   return (
-    <aside className="notice-bar notice-offline" role="status" aria-live="polite">
-      <span>
-        <b>Backend Offline:</b> Express pricing engine is unreachable. Serving cached catalogue
-        with fallback sample prices. Run <code>npm run dev:backend</code> to enable live quotes.
-      </span>
+    <aside
+      className="w-full text-center py-2 px-4 border-b border-[#0F1218] text-xs font-medium"
+      style={{
+        backgroundColor: 'var(--yellow)',
+        color: 'var(--key)',
+        letterSpacing: '0.01em',
+      }}
+      role="note"
+      aria-label="Prototype disclaimer"
+    >
+      Concept prototype. Prices are illustrative samples and no orders are real.
     </aside>
   );
 }
+
+export default Notice;

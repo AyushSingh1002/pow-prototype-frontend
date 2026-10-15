@@ -1,34 +1,30 @@
 'use client';
 
 import React from 'react';
-import { ArrowRight, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useOrderFlow } from '../../context/OrderFlowContext';
-import { StorefrontPage, BackendHealthState } from '../../types';
+import { StorefrontPage } from '../../types';
 
 interface MobileNavDrawerProps {
   isOpen?: boolean;
   onClose?: () => void;
   onNavigate?: (page: StorefrontPage) => void;
-  backendHealth?: BackendHealthState;
 }
 
 export function MobileNavDrawer({
   isOpen: propIsOpen,
   onClose: propOnClose,
   onNavigate: propNavigate,
-  backendHealth: propHealth,
 }: MobileNavDrawerProps) {
   const {
     isMobileMenuOpen,
     setIsMobileMenuOpen,
     navigate: contextNavigate,
-    backendHealth: contextHealth,
   } = useOrderFlow();
 
   const isOpen = propIsOpen !== undefined ? propIsOpen : isMobileMenuOpen;
   const onClose = propOnClose || (() => setIsMobileMenuOpen(false));
   const onNavigate = propNavigate || contextNavigate;
-  const backendHealth = propHealth || contextHealth;
 
   if (!isOpen) return null;
 
@@ -38,43 +34,81 @@ export function MobileNavDrawer({
   };
 
   return (
-    <div className="mobile-drawer" role="dialog" aria-modal="true">
-      <div className="mobile-drawer-header">
-        <div className="wordmark">
-          <span>PRESS</span>
-          <b>&amp;</b>
-          <span>PROOF</span>
-        </div>
-        <button className="btn btn-ghost" onClick={onClose} aria-label="Close menu">
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-[#E8EAEE] p-6 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Navigation menu"
+    >
+      <div className="flex items-center justify-between border-b border-[#0F1218] pb-4 mb-8">
+        <span
+          style={{
+            fontFamily: 'var(--font-headline)',
+            fontWeight: 650,
+            fontSize: '22px',
+            color: 'var(--key)',
+          }}
+        >
+          Press &amp; Proof
+        </span>
+        <button
+          onClick={onClose}
+          className="p-2 cursor-pointer bg-transparent border-0 text-[#0F1218]"
+          aria-label="Close menu"
+        >
           <X size={24} />
         </button>
       </div>
 
-      <div style={{ marginBottom: 24 }}>
-        <span className={`backend-status-pill ${backendHealth.connected ? 'connected' : 'error'}`}>
-          <span className="status-dot" />
-          {backendHealth.connected ? 'Backend Connected' : 'Connecting to API...'}
-        </span>
-      </div>
-
-      <nav className="mobile-nav-links">
-        <button onClick={() => handleNav('home')}>Home</button>
-        <button onClick={() => handleNav('catalogue')}>Products Catalogue</button>
-        <button onClick={() => handleNav('configurator')}>Configurator &amp; Pricing</button>
-        <button onClick={() => handleNav('tracking')}>Track Order</button>
-        <button onClick={() => handleNav('bulk')}>Bulk Quotes</button>
-        <button onClick={() => handleNav('help')}>Help &amp; Guidelines</button>
+      <nav className="flex flex-col space-y-4 text-lg font-bold" style={{ fontFamily: 'var(--font-headline)' }}>
+        <button
+          onClick={() => handleNav('home')}
+          className="text-left py-2 border-b border-[#CBD0DA] cursor-pointer bg-transparent border-t-0 border-x-0"
+        >
+          Home
+        </button>
+        <button
+          onClick={() => handleNav('catalogue')}
+          className="text-left py-2 border-b border-[#CBD0DA] cursor-pointer bg-transparent border-t-0 border-x-0"
+        >
+          Products
+        </button>
+        <button
+          onClick={() => handleNav('configurator')}
+          className="text-left py-2 border-b border-[#CBD0DA] cursor-pointer bg-transparent border-t-0 border-x-0"
+        >
+          Configurator
+        </button>
+        <button
+          onClick={() => handleNav('tracking')}
+          className="text-left py-2 border-b border-[#CBD0DA] cursor-pointer bg-transparent border-t-0 border-x-0"
+        >
+          Track order
+        </button>
+        <button
+          onClick={() => handleNav('bulk')}
+          className="text-left py-2 border-b border-[#CBD0DA] cursor-pointer bg-transparent border-t-0 border-x-0"
+        >
+          Bulk quotes
+        </button>
+        <button
+          onClick={() => handleNav('help')}
+          className="text-left py-2 border-b border-[#CBD0DA] cursor-pointer bg-transparent border-t-0 border-x-0"
+        >
+          Sample specifications
+        </button>
       </nav>
 
-      <div style={{ marginTop: 'auto', paddingTop: 30, borderTop: '1px solid var(--line)' }}>
+      <div className="mt-auto pt-8 border-t border-[#0F1218]">
         <button
-          className="btn btn-primary full"
-          style={{ width: '100%', padding: '14px 20px' }}
+          className="btn-proof-primary w-full py-4 text-sm"
           onClick={() => handleNav('configurator')}
         >
-          Start a Print Job <ArrowRight size={15} />
+          Configure a book
         </button>
       </div>
     </div>
   );
 }
+
+export default MobileNavDrawer;

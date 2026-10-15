@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { FileCheck2 } from 'lucide-react';
 import { ValidationResult } from '../../../lib/productUploadConfig';
 import { Product } from '../../../types';
 
@@ -12,48 +11,59 @@ interface PreflightChecklistProps {
 
 export function PreflightChecklist({ validationResults, product }: PreflightChecklistProps) {
   return (
-    <aside className="upload-side">
-      <div className="side-title">
-        <FileCheck2 size={16} />
-        <b>PRINT-READINESS CHECKS</b>
+    <aside className="proof-sheet p-6 border border-[#0F1218] bg-white space-y-4">
+      <div className="border-b border-[#0F1218] pb-3">
+        <span className="sample-stamp">Automated check</span>
+        <h3 className="text-lg font-bold mt-2" style={{ fontFamily: 'var(--font-headline)' }}>
+          Preflight verification
+        </h3>
+        <p className="reading-text-soft text-xs mt-1">
+          Automated evaluation for {product?.name || 'print job'}.
+        </p>
       </div>
-      {validationResults.map((result) => (
-        <div className="check-row" key={result.ruleId}>
-          <span>
-            {result.name}
-            <b
+
+      <div className="divide-y divide-[#CBD0DA] text-xs">
+        {validationResults.map((result) => (
+          <div className="py-2.5 flex justify-between items-start gap-3" key={result.ruleId}>
+            <div>
+              <span className="font-semibold text-[#0F1218] block">{result.name}</span>
+              <span className="text-[#5A6070] text-[11px] block mt-0.5 line-clamp-1">
+                {result.details}
+              </span>
+            </div>
+
+            <span
+              className="text-[10px] font-bold uppercase shrink-0 px-2 py-0.5 border"
               style={{
-                maxWidth: 170,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                borderColor:
+                  result.status === 'PASSED'
+                    ? '#00628F'
+                    : result.status === 'FAILED'
+                    ? '#C4161C'
+                    : '#0F1218',
+                color:
+                  result.status === 'PASSED'
+                    ? '#00628F'
+                    : result.status === 'FAILED'
+                    ? '#C4161C'
+                    : '#5A6070',
               }}
             >
-              {result.details}
-            </b>
-          </span>
-          <strong
-            className={result.status === 'WAITING' ? 'warning' : ''}
-            style={{
-              color:
-                result.status === 'PASSED'
-                  ? 'var(--success)'
-                  : result.status === 'WARNING' || result.status === 'WAITING'
-                  ? 'var(--amber)'
-                  : result.status === 'FAILED'
-                  ? 'var(--rust)'
-                  : 'var(--muted)',
-              fontSize: 10,
-            }}
-          >
-            {result.status === 'NOT_VERIFIED' ? 'NOT VERIFIED' : result.status}
-          </strong>
-        </div>
-      ))}
-      <p style={{ color: 'var(--muted)', fontSize: 11, marginTop: 16, lineHeight: 1.5 }}>
-        Automated preflight evaluates files for <b>{product?.name || 'selected product'}</b>. Server
-        keys generated at <code>POST /api/demo/uploads</code>.
+              {result.status === 'PASSED'
+                ? 'Passed'
+                : result.status === 'FAILED'
+                ? 'Failed'
+                : 'Pending'}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-[11px] text-[#5A6070] pt-2 border-t border-[#CBD0DA]">
+        Preflight inspects aspect ratio, page counts and bleed allowances.
       </p>
     </aside>
   );
 }
+
+export default PreflightChecklist;

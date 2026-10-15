@@ -1,18 +1,16 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Product, StorefrontPage } from '../../../types';
 import { useOrderFlow } from '../../../context/OrderFlowContext';
-import {
-  HeroSection,
-  OfferStrip,
-  AudienceSection,
-  LiveCatalogueSection,
-  PipelineStepsSection,
-  PricingBannerSection,
-  TrustedReviewsSection,
-  FaqSection,
-} from './sections';
+import { HeroPressSheet } from './HeroPressSheet';
+import { SentenceBuilder, PrintingIntent } from './SentenceBuilder';
+import { ProductIndex } from './ProductIndex';
+import { ProcessPath } from './ProcessPath';
+import { MiniConfigurator } from './MiniConfigurator';
+import { SamplePoliciesSection } from './SamplePoliciesSection';
+import { QuestionsSection } from './QuestionsSection';
+import { HomeBulkSection } from './HomeBulkSection';
 import { Footer } from '../../../components/layout/Footer';
 
 export interface HomeViewProps {
@@ -36,20 +34,49 @@ export function HomeView({
   const onNavigate = propNavigate || contextNavigate;
   const onSelectProduct = propSelectProduct || contextSelectProduct;
 
+  const [intent, setIntent] = useState<PrintingIntent>('author');
+
   return (
-    <main>
-      <HeroSection onNavigate={onNavigate} onSelectProduct={onSelectProduct} />
-      <OfferStrip />
-      <AudienceSection />
-      <LiveCatalogueSection
-        products={products}
+    <main className="w-full relative" role="main">
+      {/* 1. The Press Sheet Hero */}
+      <HeroPressSheet
         onNavigate={onNavigate}
         onSelectProduct={onSelectProduct}
       />
-      <PipelineStepsSection />
-      <PricingBannerSection onNavigate={onNavigate} onSelectProduct={onSelectProduct} />
-      <TrustedReviewsSection />
-      <FaqSection />
+
+      {/* 2. Printing Purpose Sentence Builder */}
+      <SentenceBuilder
+        currentIntent={intent}
+        onIntentChange={setIntent}
+      />
+
+      {/* 3. The Typographic Product Index with Live Sheet Preview */}
+      <ProductIndex
+        products={products}
+        intent={intent}
+        onNavigate={onNavigate}
+        onSelectProduct={onSelectProduct}
+      />
+
+      {/* 4. The Sticky Production Process Path */}
+      <ProcessPath />
+
+      {/* 5. Working Mini Configurator with Live Book Preview & Integer Quote */}
+      <MiniConfigurator
+        onNavigate={onNavigate}
+        onSelectProduct={onSelectProduct}
+      />
+
+      {/* 6. What Happens if Something is Wrong (Sample Policies) */}
+      <SamplePoliciesSection />
+
+      {/* 7. Questions (Grouped Accordions) */}
+      <QuestionsSection />
+
+      {/* 8. Bespoke Commercial Bulk Request */}
+      <HomeBulkSection />
+
+      {/* Site Footer with Site Index and Final Colour Bar Rule */}
       <Footer onNavigate={onNavigate} />
     </main>
   );

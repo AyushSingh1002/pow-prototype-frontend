@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Check, ChevronRight } from 'lucide-react';
 import { useOrderFlow } from '../../context/OrderFlowContext';
 import { StorefrontPage } from '../../types';
 
 interface FlowStepperProps {
-  activeStep: number;
+  activeStep: number; // 1: Configure, 2: Upload, 3: Review proof, 4: Delivery, 5: Pay
   onNavigate?: (page: StorefrontPage) => void;
 }
 
@@ -14,32 +13,67 @@ export function FlowStepper({ activeStep, onNavigate }: FlowStepperProps) {
   const { navigate: contextNavigate } = useOrderFlow();
   const navigate = onNavigate || contextNavigate;
 
-  const steps: Array<{ num: number; label: string; page: StorefrontPage }> = [
-    { num: 1, label: 'Configure Options', page: 'configurator' },
-    { num: 2, label: 'Upload Artwork', page: 'upload' },
-    { num: 3, label: 'Review Proof', page: 'proof' },
-    { num: 4, label: 'Confirm & Order', page: 'checkout' },
+  const steps: Array<{ num: number; label: string; page?: StorefrontPage }> = [
+    { num: 1, label: 'Configure', page: 'configurator' },
+    { num: 2, label: 'Upload', page: 'upload' },
+    { num: 3, label: 'Review proof', page: 'proof' },
+    { num: 4, label: 'Delivery', page: 'checkout' },
+    { num: 5, label: 'Pay', page: 'checkout' },
   ];
 
   return (
-    <div className="flow-stepper" role="navigation" aria-label="Order progress">
-      {steps.map((s, idx) => (
-        <React.Fragment key={s.num}>
+    <nav
+      className="flex items-center gap-3 md:gap-6 py-4 overflow-x-auto select-none"
+      aria-label="Order step sequence"
+    >
+      {steps.map((s) => {
+        const isCompleted = activeStep > s.num;
+        const isCurrent = activeStep === s.num;
+
+        return (
           <div
-            className={`flow-step-item ${
-              activeStep === s.num ? 'active' : activeStep > s.num ? 'completed' : ''
-            }`}
+            key={s.num}
+            className="flex items-center gap-2 cursor-default"
+            onClick={() => {
+              if (s.page && isCompleted) navigate(s.page);
+            }}
           >
-            <span className="flow-step-num">
-              {activeStep > s.num ? <Check size={11} /> : s.num}
+            {/* Colour bar step swatch */}
+            <span
+              className="w-4 h-4 transition-all duration-150 inline-block"
+              style={{
+                backgroundColor: isCompleted
+                  ? 'var(--key)'
+                  : isCurrent
+                  ? 'var(--sheet)'
+                  : 'transparent',
+                border: isCurrent
+                  ? '2px solid var(--key)'
+                  : isCompleted
+                  ? '1.5px solid var(--key)'
+                  : '1.5px dashed var(--key-soft)',
+              }}
+              title={`Step ${s.num}: ${s.label}`}
+            />
+            <span
+              className="text-xs whitespace-nowrap"
+              style={{
+                fontFamily: 'var(--font-interface)',
+                fontWeight: isCurrent ? 600 : 500,
+                color: isCurrent
+                  ? 'var(--key)'
+                  : isCompleted
+                  ? 'var(--key)'
+                  : 'var(--key-soft)',
+              }}
+            >
+              {s.num}. {s.label}
             </span>
-            <span>{s.label}</span>
           </div>
-          {idx < steps.length - 1 && (
-            <ChevronRight size={13} style={{ color: 'var(--line-strong)', margin: '0 2px' }} />
-          )}
-        </React.Fragment>
-      ))}
-    </div>
+        );
+      })}
+    </nav>
   );
 }
+
+export default FlowStepper;

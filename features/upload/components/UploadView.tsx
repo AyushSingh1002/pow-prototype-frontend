@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { ArrowRight, ChevronRight } from 'lucide-react';
 import {
   QuoteResponse,
   Product,
@@ -75,7 +74,8 @@ export function UploadView({
   const quote = propQuote !== undefined ? propQuote : context.activeQuote;
   const product = propProduct !== undefined ? propProduct : context.currentProduct;
   const options = propOptions !== undefined ? propOptions : context.activeOptions;
-  const quantity = propQuantity !== undefined ? propQuantity : context.activeQuantity;
+  const orderQuantity = propQuantity !== undefined ? propQuantity : context.activeQuantity;
+
   const slotsData = propSlotsData !== undefined ? propSlotsData : context.slotsData;
   const onSlotChange = propSlotChange || context.handleSlotChange;
   const onSlotRemove = propSlotRemove || context.handleSlotRemove;
@@ -122,7 +122,6 @@ export function UploadView({
     return data;
   }, [slotsData, interiorFile, interiorUpload, coverFile, coverPreviewUrl, coverUpload]);
 
-  // Only display upload fields applicable to the selected product and its configuration
   const activeSlots = useMemo(() => {
     return config.slots.filter((slot) => {
       if (!slot.condition) return true;
@@ -157,9 +156,7 @@ export function UploadView({
     if (file.size > (slot.maxSizeBytes || MAX_FILE_SIZE)) {
       setSlotErrors((prev) => ({
         ...prev,
-        [slot.id]: `File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds limit (${Math.round(
-          (slot.maxSizeBytes || MAX_FILE_SIZE) / (1024 * 1024)
-        )}MB).`,
+        [slot.id]: `File size exceeds ${(slot.maxSizeBytes || MAX_FILE_SIZE) / (1024 * 1024)}MB.`,
       }));
       return;
     }
@@ -178,43 +175,43 @@ export function UploadView({
           width: preview.width,
           height: preview.height,
           aspectRatio: preview.aspectRatio,
-          detectedLayout: preview.detectedLayout,
           numPages: preview.numPages,
         };
-      } catch (previewErr) {
-        console.warn('Artwork preview generation note:', previewErr);
-        previewUrl = '';
+      } catch (err) {
+        console.warn('Local preview generation skipped:', err);
       }
 
-      let uploadResult: UploadMetadataResponse | null = null;
+      let uploadRes: UploadMetadataResponse | null = null;
       try {
-        uploadResult = await registerArtworkUpload({
+        uploadRes = await registerArtworkUpload({
           originalFilename: file.name,
-          mimeType: file.type || 'application/octet-stream',
+          mimeType: file.type || 'application/pdf',
           sizeBytes: file.size,
           quoteId: quote?.id,
         });
-      } catch (regErr) {
-        console.warn('Upload registration warning:', regErr);
+      } catch (err) {
+        console.warn('Server preflight bypassed in demo mode');
       }
 
-      onSlotChange?.(slot.id, {
+      const slotResult: UploadedSlotData = {
         file,
         previewUrl,
         isObjectUrl,
+        uploadResponse: uploadRes,
         metadata,
-        uploadResponse: uploadResult,
-      });
+      };
 
-      if (slot.id === 'interior' || slot.role === 'manuscript') {
-        onInteriorChange?.(file, uploadResult, metadata.numPages);
-      } else if (slot.id === 'cover' || slot.role === 'cover') {
-        onCoverChange?.(file, previewUrl, isObjectUrl, uploadResult, metadata);
+      onSlotChange(slot.id, slotResult);
+
+      if (slot.id === 'interior') {
+        onInteriorChange(file, uploadRes, metadata.numPages);
+      } else if (slot.id === 'cover') {
+        onCoverChange(file, previewUrl, isObjectUrl, uploadRes, metadata);
       }
     } catch (err: any) {
       setSlotErrors((prev) => ({
         ...prev,
-        [slot.id]: err.message || 'File processing failed.',
+        [slot.id]: err.message || 'Artwork processing failed. Ensure file is unencrypted.',
       }));
     } finally {
       setUploadingSlots((prev) => ({ ...prev, [slot.id]: false }));
@@ -222,27 +219,20 @@ export function UploadView({
   };
 
   const handleRemove = (slotId: string) => {
-    onSlotRemove?.(slotId);
-    if (slotId === 'interior' || slotId === 'manuscript') {
-      onInteriorRemove?.();
-    } else if (slotId === 'cover') {
-      onCoverRemove?.();
-    }
-    setSlotErrors((prev) => ({ ...prev, [slotId]: null }));
+    onSlotRemove(slotId);
+    if (slotId === 'interior') onInteriorRemove();
+    if (slotId === 'cover') onCoverRemove();
   };
 
-  // Preflight validation checks from the central product configuration
-  const orderQuantity = quantity ?? quote?.lineItems?.[0]?.quantity ?? 10;
   const validationResults = useMemo(() => {
     return config.evaluateChecks({
-      productId: config.productId,
-      options,
+      productId: product?.id || 'books',
+      options: options || {},
       slotsData: currentSlotsData,
       quantity: orderQuantity,
     });
-  }, [config, options, currentSlotsData, orderQuantity]);
+  }, [config, product?.id, options, currentSlotsData, orderQuantity]);
 
-  // Can proceed if all required active slots are uploaded and none are currently uploading
   const canProceed = useMemo(() => {
     const isAnyUploading = Object.values(uploadingSlots).some(Boolean);
     if (isAnyUploading) return false;
@@ -256,63 +246,75 @@ export function UploadView({
   }, [activeSlots, options, currentSlotsData, uploadingSlots]);
 
   return (
-    <>
-      <div className="page-intro compact">
-        <div className="breadcrumbs">
-          <button onClick={() => onNavigate('home')}>Home</button>
-          <ChevronRight size={13} />
-          <button onClick={() => onNavigate('configurator')}>Configurator</button>
-          <ChevronRight size={13} />
-          <span>Upload Artwork</span>
-        </div>
+    <div className="w-full">
+      <div className="proof-container py-6">
         <FlowStepper activeStep={2} onNavigate={onNavigate} />
-        <h1 style={{ marginTop: 24 }}>{config.title}</h1>
-        <p>{config.subtitle}</p>
+
+        <div className="border-b border-[#0F1218] pb-4 mb-8">
+          <div className="flex justify-between items-baseline flex-wrap gap-2">
+            <h1>Upload Print Artwork</h1>
+            <span className="sample-stamp">Preflight check</span>
+          </div>
+          <p className="reading-text-soft text-sm mt-1">
+            Files undergo automatic preflight verification for trim geometry, bleed margins and ink gamut.
+          </p>
+        </div>
+
+        <div className="crop-marked proof-sheet p-6 md:p-12 border border-[#0F1218] bg-[#FDFDFC]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            {/* Left 7 Columns: Slots */}
+            <div className="lg:col-span-7 space-y-6">
+              {activeSlots.map((slot, index) => {
+                const slotData = currentSlotsData[slot.id];
+                const isUploading = !!uploadingSlots[slot.id];
+                const isDragOver = !!dragOverSlots[slot.id];
+                const error = slotErrors[slot.id];
+                const isRequired =
+                  typeof slot.required === 'function' ? slot.required(options) : slot.required;
+
+                return (
+                  <UploadSlotCard
+                    key={slot.id}
+                    slot={slot}
+                    index={index}
+                    slotData={slotData}
+                    isRequired={isRequired}
+                    isUploading={isUploading}
+                    isDragOver={isDragOver}
+                    error={error}
+                    onUpload={handleFileUpload}
+                    onRemove={handleRemove}
+                    onDragOverChange={(id, over) =>
+                      setDragOverSlots((prev) => ({ ...prev, [id]: over }))
+                    }
+                  />
+                );
+              })}
+
+              <div className="pt-6">
+                <button
+                  className="btn-proof-primary py-3.5 px-8 text-sm"
+                  disabled={!canProceed}
+                  onClick={() => onNavigate('proof')}
+                >
+                  Continue to digital proof
+                </button>
+              </div>
+            </div>
+
+            {/* Right 5 Columns: Preflight Checklist Sheet */}
+            <div className="lg:col-span-5 sticky top-24">
+              <PreflightChecklist validationResults={validationResults} product={product} />
+            </div>
+          </div>
+
+          <div className="crop-marks-bottom" />
+        </div>
       </div>
 
-      <main className="upload-layout">
-        <div className="upload-main">
-          {activeSlots.map((slot, index) => {
-            const slotData = currentSlotsData[slot.id];
-            const isUploading = !!uploadingSlots[slot.id];
-            const isDragOver = !!dragOverSlots[slot.id];
-            const error = slotErrors[slot.id];
-            const isRequired =
-              typeof slot.required === 'function' ? slot.required(options) : slot.required;
-
-            return (
-              <UploadSlotCard
-                key={slot.id}
-                slot={slot}
-                index={index}
-                slotData={slotData}
-                isRequired={isRequired}
-                isUploading={isUploading}
-                isDragOver={isDragOver}
-                error={error}
-                onUpload={handleFileUpload}
-                onRemove={handleRemove}
-                onDragOverChange={(id, over) =>
-                  setDragOverSlots((prev) => ({ ...prev, [id]: over }))
-                }
-              />
-            );
-          })}
-
-          <button
-            className="btn btn-primary"
-            style={{ padding: '14px 24px', fontSize: 11, marginTop: 28 }}
-            disabled={!canProceed}
-            onClick={() => onNavigate('proof')}
-          >
-            Continue to visual proof <ArrowRight size={14} />
-          </button>
-        </div>
-
-        <PreflightChecklist validationResults={validationResults} product={product} />
-      </main>
-
       <Footer onNavigate={onNavigate} />
-    </>
+    </div>
   );
 }
+
+export default UploadView;

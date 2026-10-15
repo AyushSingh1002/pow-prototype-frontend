@@ -1,15 +1,14 @@
 'use client';
 
-import React from 'react';
-import { ArrowRight, Menu, User } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Menu, User } from 'lucide-react';
 import { useOrderFlow } from '../../context/OrderFlowContext';
 import { useAuth } from '../../context/AuthContext';
-import { StorefrontPage, BackendHealthState } from '../../types';
+import { StorefrontPage } from '../../types';
 
 interface HeaderProps {
   currentPage?: StorefrontPage | string;
   onNavigate?: (page: StorefrontPage) => void;
-  backendHealth?: BackendHealthState;
   currentUser?: string | null;
   onOpenSignIn?: () => void;
   onOpenMobileMenu?: () => void;
@@ -18,7 +17,6 @@ interface HeaderProps {
 export function Header({
   currentPage: propPage,
   onNavigate: propNavigate,
-  backendHealth: propHealth,
   currentUser: propUser,
   onOpenSignIn: propOpenSignIn,
   onOpenMobileMenu: propOpenMobileMenu,
@@ -26,105 +24,114 @@ export function Header({
   const {
     page: contextPage,
     navigate: contextNavigate,
-    backendHealth: contextHealth,
     setIsMobileMenuOpen,
   } = useOrderFlow();
   const { currentUser: contextUser, openSignIn: contextOpenSignIn } = useAuth();
 
   const currentPage = propPage || contextPage;
   const onNavigate = propNavigate || contextNavigate;
-  const backendHealth = propHealth || contextHealth;
   const currentUser = propUser !== undefined ? propUser : contextUser;
   const onOpenSignIn = propOpenSignIn || contextOpenSignIn;
   const onOpenMobileMenu = propOpenMobileMenu || (() => setIsMobileMenuOpen(true));
 
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setHasScrolled(window.scrollY > 12);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <header className="site-header">
-      <div className="header-left">
+    <header
+      className="sticky top-0 z-40 transition-colors duration-150"
+      style={{
+        backgroundColor: 'var(--table)',
+        borderBottom: hasScrolled ? '1px solid var(--key)' : '1px solid transparent',
+      }}
+    >
+      <div className="proof-container flex items-center justify-between h-[64px]">
+        {/* Wordmark */}
         <button
-          className="wordmark"
           onClick={() => onNavigate('home')}
+          className="text-left cursor-pointer bg-transparent border-0 p-0 text-inherit"
           aria-label="Press and Proof home"
         >
-          <span>PRESS</span>
-          <b>&amp;</b>
-          <span>PROOF</span>
+          <span
+            style={{
+              fontFamily: 'var(--font-headline)',
+              fontWeight: 650,
+              fontSize: '20px',
+              letterSpacing: '-0.02em',
+              color: 'var(--key)',
+            }}
+          >
+            Press &amp; Proof
+          </span>
         </button>
 
-        <span
-          className={`backend-status-pill ${backendHealth.connected ? 'connected' : 'error'}`}
-          title={
-            backendHealth.connected
-              ? `Backend Connected (Config: ${backendHealth.version || 'sample-v1'})`
-              : 'Connecting to Express backend on port 5000...'
-          }
-        >
-          <span className="status-dot" />
-          {backendHealth.connected ? (
-            <>API Connected · {backendHealth.version || 'sample-v1'}</>
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
+          {[
+            { page: 'catalogue' as StorefrontPage, label: 'Products' },
+            { page: 'tracking' as StorefrontPage, label: 'Track order' },
+            { page: 'bulk' as StorefrontPage, label: 'Bulk quotes' },
+            { page: 'help' as StorefrontPage, label: 'Help' },
+          ].map((item) => {
+            const isActive = currentPage === item.page;
+            return (
+              <button
+                key={item.page}
+                onClick={() => onNavigate(item.page)}
+                className="cursor-pointer bg-transparent border-0 p-0 text-sm font-medium transition-colors"
+                style={{
+                  color: isActive ? 'var(--key)' : 'var(--key-soft)',
+                  borderBottom: isActive ? '1.5px solid var(--key)' : '1.5px solid transparent',
+                  paddingBottom: '2px',
+                }}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Right Actions: Sign in and Mobile Drawer Trigger */}
+        <div className="flex items-center gap-4">
+          {currentUser ? (
+            <button
+              onClick={onOpenSignIn}
+              className="flex items-center gap-2 text-sm font-medium cursor-pointer bg-transparent border-0 p-0"
+              style={{ color: 'var(--key)' }}
+              title="Account profile"
+            >
+              <User size={16} />
+              <span>{currentUser}</span>
+            </button>
           ) : (
-            <>Connecting...</>
+            <button
+              onClick={onOpenSignIn}
+              className="text-sm font-medium cursor-pointer bg-transparent border-0 p-0 hover:underline"
+              style={{ color: 'var(--key)' }}
+            >
+              Sign in
+            </button>
           )}
-        </span>
-      </div>
 
-      <nav className="desktop-nav" aria-label="Main navigation">
-        <button
-          className={currentPage === 'catalogue' ? 'active' : ''}
-          onClick={() => onNavigate('catalogue')}
-        >
-          Products
-        </button>
-        <button
-          className={currentPage === 'configurator' ? 'active' : ''}
-          onClick={() => onNavigate('configurator')}
-        >
-          Configurator
-        </button>
-        <button
-          className={currentPage === 'tracking' ? 'active' : ''}
-          onClick={() => onNavigate('tracking')}
-        >
-          Track order
-        </button>
-        <button
-          className={currentPage === 'bulk' ? 'active' : ''}
-          onClick={() => onNavigate('bulk')}
-        >
-          Bulk quotes
-        </button>
-        <button
-          className={currentPage === 'help' ? 'active' : ''}
-          onClick={() => onNavigate('help')}
-        >
-          Help
-        </button>
-      </nav>
-
-      <div className="header-actions">
-        {currentUser ? (
-          <button className="btn btn-ghost" onClick={onOpenSignIn} title="Account profile">
-            <User size={14} />
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{currentUser}</span>
+          <button
+            onClick={onOpenMobileMenu}
+            className="md:hidden flex items-center justify-center p-1.5 cursor-pointer bg-transparent border-0"
+            style={{ color: 'var(--key)' }}
+            aria-label="Open navigation menu"
+          >
+            <Menu size={22} />
           </button>
-        ) : (
-          <button className="btn btn-ghost" onClick={onOpenSignIn}>
-            Sign in
-          </button>
-        )}
-
-        <button className="btn btn-primary" onClick={() => onNavigate('configurator')}>
-          Start printing <ArrowRight size={14} />
-        </button>
-
-        <button
-          className="btn btn-ghost mobile-menu"
-          onClick={onOpenMobileMenu}
-          aria-label="Open mobile menu"
-        >
-          <Menu size={20} />
-        </button>
+        </div>
       </div>
     </header>
   );
 }
+
+export default Header;
