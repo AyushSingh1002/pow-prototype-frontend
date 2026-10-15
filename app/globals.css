@@ -437,7 +437,7 @@ a:focus-visible {
 .proof-container {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0 clamp(20px, 4vw, 56px);
+  padding: 0 clamp(20px, 3.5vw, 56px);
   width: 100%;
 }
 

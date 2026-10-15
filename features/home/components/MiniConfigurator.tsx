@@ -42,9 +42,9 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
           </p>
         </div>
 
-        <div className="proof-sheet p-5 sm:p-8 lg:p-10 border border-[#0F1218] grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        <div className="proof-sheet p-5 sm:p-8 lg:p-10 border border-[#0F1218] grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
           {/* Left Column: Clear Controls */}
-          <div className="lg:col-span-7 space-y-6 lg:pr-2">
+          <div className="lg:col-span-7 flex flex-col gap-8 lg:pr-4">
             {/* Control 1: Binding */}
             <div>
               <div className="flex justify-between items-baseline mb-3">
