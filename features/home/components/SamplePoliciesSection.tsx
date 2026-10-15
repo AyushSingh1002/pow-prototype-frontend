@@ -4,9 +4,9 @@ import React from 'react';
 
 export function SamplePoliciesSection() {
   return (
-    <section className="py-16 sm:py-20 lg:py-24 border-t border-[#CBD0DA]" aria-label="Resolution policies for print discrepancies">
+    <section className="py-20 sm:py-24 lg:py-28 border-t border-[#CBD0DA]" aria-label="Resolution policies for print discrepancies">
       <div className="proof-container">
-        <div className="border-b border-[#0F1218] pb-5 mb-10 flex justify-between items-baseline flex-wrap gap-4">
+        <div className="border-b border-[#0F1218] pb-6 mb-12 flex justify-between items-start flex-wrap gap-6">
           <div>
             <span className="text-xs uppercase font-bold tracking-wider text-[#5A6070] block mb-2 font-mono">
               PRODUCTION STANDARDS
@@ -21,7 +21,7 @@ export function SamplePoliciesSection() {
           <span className="sample-stamp">Sample policy text</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-12">
           <div className="space-y-3 md:border-r md:border-[#CBD0DA] md:pr-8">
             <span className="text-xs font-mono text-[#5A6070] block">POLICY 01</span>
             <h3 className="text-xl font-bold text-[#0F1218]" style={{ fontFamily: 'var(--font-headline)' }}>

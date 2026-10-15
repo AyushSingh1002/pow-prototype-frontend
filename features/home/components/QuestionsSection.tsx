@@ -30,7 +30,7 @@ export function QuestionsSection() {
   ];
 
   return (
-    <section className="py-16 sm:py-24 lg:py-28 border-t border-[#CBD0DA]" aria-label="Frequently asked questions">
+    <section className="py-20 sm:py-24 lg:py-28 border-t border-[#CBD0DA]" aria-label="Frequently asked questions">
       <div className="proof-container">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
           {/* Left 4 Columns: Typographic Headline */}
@@ -73,7 +73,7 @@ export function QuestionsSection() {
 
                   {isOpen && (
                     <div className="pt-4 pr-6 sm:pr-12">
-                      <p className="reading-text text-base text-[#5A6070] leading-relaxed">
+                      <p className="reading-text text-base text-[#5A6070] leading-7 max-w-2xl">
                         {faq.a}
                       </p>
                     </div>
