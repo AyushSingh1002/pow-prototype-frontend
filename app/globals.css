@@ -34,6 +34,11 @@
   --duration-fast: 150ms;
   --duration-panel: 250ms;
   --duration-digits: 400ms;
+  --duration-smooth: 520ms;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 /* Base Light Table Setup */
@@ -44,7 +49,6 @@
 }
 
 html {
-  scroll-behavior: smooth;
   color-scheme: light;
 }
 
@@ -139,6 +143,13 @@ p.reading-text {
 
 .btn-proof-primary:hover {
   background-color: #0884bd;
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 0 var(--key);
+}
+
+.btn-proof-primary:focus-visible,
+.btn-proof-secondary:focus-visible {
+  box-shadow: 3px 3px 0 0 var(--key);
 }
 
 .btn-proof-primary:active {
@@ -166,6 +177,8 @@ p.reading-text {
 
 .btn-proof-secondary:hover {
   background-color: #F0F2F6;
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 0 var(--key);
 }
 
 .btn-proof-secondary:active {
@@ -202,7 +215,7 @@ a:focus-visible {
 .proof-sheet {
   background-color: var(--sheet);
   border-radius: 0px;
-  box-shadow: var(--sheet-shadow-stacked);
+  box-shadow: var(--sheet-shadow-subtle);
   position: relative;
   border: 1px solid rgba(15, 18, 24, 0.08);
 }
@@ -438,8 +451,21 @@ a:focus-visible {
 .proof-container {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0 clamp(20px, 4vw, 56px);
+  padding: 0 clamp(20px, 4vw, 64px);
   width: 100%;
+}
+
+main > section {
+  animation: section-enter 700ms var(--ease-print) both;
+}
+
+main > section:nth-child(2n) {
+  animation-delay: 60ms;
+}
+
+@keyframes section-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .grid-12 {

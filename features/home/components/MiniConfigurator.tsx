@@ -33,7 +33,7 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
   };
 
   return (
-    <section className="py-16 md:py-24" aria-label="Interactive mini book configurator">
+    <section className="py-16 sm:py-20 lg:py-24" aria-label="Interactive mini book configurator">
       <div className="proof-container">
         <div className="border-b border-[#0F1218] pb-4 mb-8">
           <h2>Working Book Estimator</h2>
@@ -42,9 +42,9 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
           </p>
         </div>
 
-        <div className="proof-sheet p-6 sm:p-10 md:p-12 border border-[#0F1218] grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+        <div className="proof-sheet p-5 sm:p-8 lg:p-10 border border-[#CBD0DA] grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Left Column: Clear Controls */}
-          <div className="lg:col-span-6 space-y-8">
+          <div className="lg:col-span-7 flex flex-col gap-6 lg:pr-4">
             {/* Control 1: Binding */}
             <div>
               <div className="flex justify-between items-baseline mb-3">
@@ -162,7 +162,7 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
           </div>
 
           {/* Right Column: Live Book Preview + Live Estimate Sheet */}
-          <div className="lg:col-span-6 space-y-6 sticky top-24">
+          <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-24">
             <LiveBookPreview
               format="a5"
               binding={binding}

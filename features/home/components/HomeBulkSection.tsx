@@ -18,11 +18,11 @@ export function HomeBulkSection() {
   };
 
   return (
-    <section className="py-16 sm:py-24 lg:py-28 border-t border-[#CBD0DA]" aria-label="Commercial and high-volume quote requests">
+    <section className="py-20 sm:py-24 lg:py-28 border-t border-[#CBD0DA]" aria-label="Commercial and high-volume quote requests">
       <div className="proof-container">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
           {/* Left 5 Columns: Commercial Information & WhatsApp Direct */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 space-y-7 lg:pr-4">
             <div>
               <span className="text-xs uppercase font-bold tracking-wider text-[#5A6070] block mb-2 font-mono">
                 HIGH-VOLUME RUNS
@@ -35,7 +35,7 @@ export function HomeBulkSection() {
               </p>
             </div>
 
-            <div className="p-5 bg-white border border-[#CBD0DA] space-y-3">
+            <div className="p-4 bg-white border border-[#CBD0DA] space-y-3">
               <span className="text-xs font-bold uppercase tracking-wider text-[#0F1218] block font-mono">
                 COMMERCIAL SERVICES
               </span>
@@ -60,7 +60,7 @@ export function HomeBulkSection() {
 
           {/* Right 7 Columns: Form Sheet */}
           <div className="lg:col-span-7">
-            <div className="proof-sheet p-6 sm:p-10 border border-[#0F1218]">
+            <div className="proof-sheet p-5 sm:p-8 lg:p-10 border border-[#0F1218]">
               {submitted ? (
                 <div className="p-8 bg-[#E8EAEE] border border-[#0F1218] text-center space-y-3">
                   <span className="sample-stamp">Demo request received</span>

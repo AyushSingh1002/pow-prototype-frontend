@@ -14,7 +14,7 @@ export function Footer({ onNavigate: propNavigate }: FooterProps) {
 
   return (
     <footer
-      className="w-full mt-24 pt-16 pb-12 border-t"
+      className="w-full mt-28 pt-16 pb-12 border-t"
       style={{
         backgroundColor: 'var(--sheet)',
         borderColor: 'var(--key)',
@@ -23,7 +23,7 @@ export function Footer({ onNavigate: propNavigate }: FooterProps) {
     >
       <div className="proof-container">
         {/* Large Type-set Site Index */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-16 pb-14">
           <div className="md:col-span-1">
             <h3
               style={{
@@ -42,10 +42,10 @@ export function Footer({ onNavigate: propNavigate }: FooterProps) {
           </div>
 
           <div>
-            <h4 className="text-xs uppercase font-bold tracking-wider mb-4" style={{ color: 'var(--key-soft)' }}>
+            <h4 className="text-xs font-bold mb-4" style={{ color: 'var(--key-soft)' }}>
               Products
             </h4>
-            <ul className="space-y-2.5 text-sm list-none p-0 m-0">
+            <ul className="flex flex-col gap-2.5 text-sm list-none p-0 m-0">
               <li>
                 <button
                   onClick={() => onNavigate('catalogue')}
@@ -82,10 +82,10 @@ export function Footer({ onNavigate: propNavigate }: FooterProps) {
           </div>
 
           <div>
-            <h4 className="text-xs uppercase font-bold tracking-wider mb-4" style={{ color: 'var(--key-soft)' }}>
+            <h4 className="text-xs font-bold mb-4" style={{ color: 'var(--key-soft)' }}>
               Journey &amp; Specs
             </h4>
-            <ul className="space-y-2.5 text-sm list-none p-0 m-0">
+            <ul className="flex flex-col gap-2.5 text-sm list-none p-0 m-0">
               <li>
                 <button
                   onClick={() => onNavigate('configurator')}
@@ -122,10 +122,10 @@ export function Footer({ onNavigate: propNavigate }: FooterProps) {
           </div>
 
           <div>
-            <h4 className="text-xs uppercase font-bold tracking-wider mb-4" style={{ color: 'var(--key-soft)' }}>
+            <h4 className="text-xs font-bold mb-4" style={{ color: 'var(--key-soft)' }}>
               Information
             </h4>
-            <ul className="space-y-2.5 text-sm list-none p-0 m-0">
+            <ul className="flex flex-col gap-2.5 text-sm list-none p-0 m-0">
               <li>
                 <button
                   onClick={() => onNavigate('help')}
