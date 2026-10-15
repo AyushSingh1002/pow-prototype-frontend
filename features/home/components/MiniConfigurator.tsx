@@ -33,7 +33,7 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
   };
 
   return (
-    <section className="py-16 sm:py-20 lg:py-24" aria-label="Interactive mini book configurator">
+    <section className="py-20 sm:py-24 lg:py-32" aria-label="Interactive mini book configurator">
       <div className="proof-container">
         <div className="border-b border-[#0F1218] pb-4 mb-8">
           <h2>Working Book Estimator</h2>
@@ -42,7 +42,7 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
           </p>
         </div>
 
-        <div className="proof-sheet p-5 sm:p-8 lg:p-10 border border-[#0F1218] grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+        <div className="proof-sheet p-5 sm:p-9 lg:p-12 border border-[#0F1218] grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           {/* Left Column: Clear Controls */}
           <div className="lg:col-span-7 flex flex-col gap-8 lg:pr-4">
             {/* Control 1: Binding */}
