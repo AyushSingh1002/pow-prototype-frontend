@@ -69,11 +69,11 @@ export function ProductIndex({
       <div className="proof-container">
         <div className="border-b border-[#0F1218] pb-5 mb-10 flex justify-between items-end flex-wrap gap-4">
           <div>
-            <span className="text-xs uppercase font-bold tracking-wider text-[#5A6070] block mb-2 font-mono">
-              SPECIFICATION INDEX
+            <span className="text-xs font-bold tracking-wide text-[#5A6070] block mb-2">
+              Print formats
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-headline)' }}>
-              Product Catalogue
+Choose a format
             </h2>
             <p className="reading-text-soft text-base mt-2 max-w-xl">
               Select a format to review binding mechanics, paper stocks and live sample integer estimates.

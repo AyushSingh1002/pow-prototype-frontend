@@ -34,8 +34,8 @@ export function HeroPressSheet({ onNavigate, onSelectProduct }: HeroPressSheetPr
     <section className="pt-10 sm:pt-16 lg:pt-20 pb-16 sm:pb-24 lg:pb-32 overflow-hidden relative">
       <div className="proof-container">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-10 lg:gap-x-8 items-center">
-          {/* Left: 7 Columns on Row 1 (tracks 1 to 7) */}
-          <div className="lg:col-start-1 lg:col-span-7 lg:row-start-1 z-20">
+          {/* Left: 5 columns on the first row */}
+          <div className="lg:col-start-1 lg:col-span-5 lg:row-start-1 z-20">
             <h1 className="mb-6 max-w-xl text-balance">
               See the price before you sign in.
             </h1>
@@ -61,9 +61,9 @@ export function HeroPressSheet({ onNavigate, onSelectProduct }: HeroPressSheetPr
             </div>
           </div>
 
-          {/* Right: 6 Columns on Row 1 (tracks 7 to 12, 1-col overlap at track 7) */}
+          {/* Right: 7 columns on the first row, with a measured overlap at the fold */}
           <div
-            className="lg:col-start-7 lg:col-span-6 lg:row-start-1 z-10 flex justify-center lg:justify-end mt-4 lg:mt-0"
+            className="lg:col-start-6 lg:col-span-7 lg:row-start-1 z-10 flex justify-center lg:justify-end mt-4 lg:mt-0"
             style={{
               transform: `translateY(${sheetLift}px) rotate(${sheetRotation}deg)`,
               transformOrigin: 'top right',
@@ -71,7 +71,7 @@ export function HeroPressSheet({ onNavigate, onSelectProduct }: HeroPressSheetPr
             }}
           >
             <div
-              className="proof-sheet p-5 sm:p-7 md:p-8 w-full max-w-[680px] min-h-[380px] sm:min-h-[460px] md:min-h-[500px] flex flex-col justify-between"
+              className="proof-sheet p-5 sm:p-7 md:p-8 w-full max-w-[820px] min-h-[430px] sm:min-h-[560px] md:min-h-[620px] flex flex-col justify-between"
               style={{
                 backgroundColor: 'var(--sheet)',
                 border: '1.5px solid var(--key)',
