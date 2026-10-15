@@ -215,15 +215,9 @@ a:focus-visible {
 .proof-sheet {
   background-color: var(--sheet);
   border-radius: 0px;
-  box-shadow: var(--sheet-shadow-stacked);
+  box-shadow: var(--sheet-shadow-subtle);
   position: relative;
   border: 1px solid rgba(15, 18, 24, 0.08);
-  transition: box-shadow var(--duration-smooth) var(--ease-print), transform var(--duration-smooth) var(--ease-print);
-}
-
-.proof-sheet:hover {
-  box-shadow: 4px 4px 0 0 #CBD0DA, 8px 8px 0 0 #B8BDCA;
-  transform: translate(-1px, -1px);
 }
 
 .proof-sheet-flat {
