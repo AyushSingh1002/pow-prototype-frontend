@@ -29,10 +29,6 @@ export function SignInModal({
   const currentUser = propUser !== undefined ? propUser : contextUser;
   const onSelectUser = propSelectUser || contextSetUser;
 
-  const [activeTab, setActiveTab] = useState<'demo' | 'email'>('demo');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
   if (!isOpen) return null;
 
   const demoAccounts = [
@@ -93,31 +89,10 @@ export function SignInModal({
           </div>
         )}
 
-        <div className="flex border-b border-[#0F1218] mb-6">
-          <button
-            className="pb-2 text-xs font-semibold cursor-pointer bg-transparent border-0 transition-colors mr-6"
-            style={{
-              color: activeTab === 'demo' ? '#0F1218' : '#5A6070',
-              borderBottom: activeTab === 'demo' ? '2px solid #0F1218' : '2px solid transparent',
-            }}
-            onClick={() => setActiveTab('demo')}
-          >
-            Demo profiles
-          </button>
-          <button
-            className="pb-2 text-xs font-semibold cursor-pointer bg-transparent border-0 transition-colors"
-            style={{
-              color: activeTab === 'email' ? '#0F1218' : '#5A6070',
-              borderBottom: activeTab === 'email' ? '2px solid #0F1218' : '2px solid transparent',
-            }}
-            onClick={() => setActiveTab('email')}
-          >
-            Email login
-          </button>
+        <div className="mb-4 border-b border-[#CBD0DA] pb-3 text-xs font-semibold text-[#5A6070]">
+          Prototype profiles
         </div>
-
-        {activeTab === 'demo' ? (
-          <div className="space-y-3">
+        <div className="space-y-3">
             {demoAccounts.map((acc) => (
               <button
                 key={acc.id}
@@ -140,49 +115,7 @@ export function SignInModal({
                 )}
               </button>
             ))}
-          </div>
-        ) : (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (email) {
-                onSelectUser(email);
-                onClose();
-              }
-            }}
-            className="space-y-4 text-xs"
-          >
-            <div>
-              <label className="font-semibold text-[#0F1218] block mb-1">
-                Email address
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="editor@pressandproof.in"
-                className="w-full p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm"
-              />
-            </div>
-            <div>
-              <label className="font-semibold text-[#0F1218] block mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm"
-              />
-            </div>
-            <button type="submit" className="btn-proof-primary w-full py-3 text-sm mt-2">
-              Sign in
-            </button>
-          </form>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { CoverSpreadCalculation, ArtworkLayoutType } from '../../../lib/coverSpread';
 import { CoverMetadata } from '../../../types';
+import { generateArtworkPreview } from '../../../lib/pdfPreview';
 
 interface ProofViewerProps {
   options: Record<string, string>;
@@ -27,6 +28,7 @@ export function ProofViewer({
   interiorFile,
   coverFile,
   coverPreviewUrl,
+  effectiveLayout,
   interiorPageCount = 120,
   currentManuscriptPage = 1,
   onManuscriptPageChange,
@@ -37,9 +39,39 @@ export function ProofViewer({
   const [showBleedGuide, setShowBleedGuide] = useState<boolean>(true);
   const [showSpineGuide, setShowSpineGuide] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'cover' | 'interior'>('cover');
+  const [interiorPreviewUrl, setInteriorPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isCurrent = true;
+    let generatedObjectUrl: string | null = null;
+
+    if (!interiorFile) {
+      setInteriorPreviewUrl(null);
+      return;
+    }
+
+    generateArtworkPreview(interiorFile, currentManuscriptPage)
+      .then((preview) => {
+        if (!isCurrent) {
+          if (preview.isObjectUrl) URL.revokeObjectURL(preview.previewUrl);
+          return;
+        }
+        if (preview.isObjectUrl) generatedObjectUrl = preview.previewUrl;
+        setInteriorPreviewUrl(preview.previewUrl || null);
+      })
+      .catch((error) => {
+        console.warn('Manuscript preview unavailable:', error);
+        if (isCurrent) setInteriorPreviewUrl(null);
+      });
+
+    return () => {
+      isCurrent = false;
+      if (generatedObjectUrl) URL.revokeObjectURL(generatedObjectUrl);
+    };
+  }, [interiorFile, currentManuscriptPage]);
 
   return (
-    <div className="proof-sheet p-6 border border-[#0F1218] bg-white">
+    <div className="proof-sheet p-3 sm:p-6 border border-[#0F1218] bg-white">
       {/* Light Table Controls Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#0F1218] pb-4 mb-6">
         {/* View mode toggle */}
@@ -125,7 +157,7 @@ export function ProofViewer({
 
       {/* Light Table Inspection Canvas */}
       <div
-        className="relative bg-[#E8EAEE] p-8 md:p-12 border border-[#CBD0DA] overflow-hidden flex flex-col items-center justify-center min-h-[380px]"
+        className="relative bg-[#E8EAEE] p-2 sm:p-6 md:p-12 border border-[#CBD0DA] overflow-hidden flex flex-col items-center justify-center min-h-[260px] sm:min-h-[380px]"
         style={{
           transform: `scale(${zoom / 100})`,
           transformOrigin: 'center top',
@@ -135,9 +167,19 @@ export function ProofViewer({
         {activeTab === 'cover' ? (
           /* COVER SPREAD LIGHT TABLE SHEET */
           <div
-            className="relative bg-white border border-[#0F1218] shadow-md flex items-stretch"
-            style={{ width: '480px', height: '300px' }}
+            className="relative w-full max-w-[480px] aspect-[8/5] bg-white border border-[#0F1218] shadow-md flex items-stretch"
           >
+            {coverPreviewUrl && (
+              <img
+                src={coverPreviewUrl}
+                alt={`Uploaded cover artwork: ${coverFile?.name || 'cover artwork'}`}
+                className="pointer-events-none absolute top-0 bottom-0 z-10 object-contain"
+                style={effectiveLayout === 'front-only'
+                  ? { right: 0, width: '50%', height: '100%' }
+                  : { inset: 0, width: '100%', height: '100%' }}
+              />
+            )}
+
             {/* 3mm Bleed Guideline (Magenta) */}
             {showBleedGuide && (
               <div
@@ -167,7 +209,7 @@ export function ProofViewer({
             )}
 
             {/* Back Cover (Left) */}
-            <div className="flex-1 p-4 flex flex-col justify-between border-r border-[#CBD0DA]">
+            {!coverPreviewUrl && <div className="flex-1 p-4 flex flex-col justify-between border-r border-[#CBD0DA]">
               <div className="text-[9px] font-mono text-[#5A6070]">BACK COVER</div>
               <div className="text-center my-auto">
                 <div className="w-16 h-10 border border-[#0F1218] bg-white mx-auto flex items-center justify-center text-[7px] font-mono">
@@ -175,10 +217,10 @@ export function ProofViewer({
                 </div>
               </div>
               <div className="text-[8px] font-mono text-[#5A6070]">ISBN SAMPLE</div>
-            </div>
+            </div>}
 
             {/* Front Cover (Right) */}
-            <div className="flex-1 p-4 flex flex-col justify-between">
+            {!coverPreviewUrl && <div className="flex-1 p-4 flex flex-col justify-between">
               <div className="text-[9px] font-mono text-[#5A6070]">FRONT COVER</div>
               <div className="space-y-2 my-auto text-center">
                 <div className="text-base font-bold text-[#0F1218]" style={{ fontFamily: 'var(--font-headline)' }}>
@@ -189,7 +231,7 @@ export function ProofViewer({
                 </div>
               </div>
               <div className="text-[8px] font-mono text-[#5A6070]">A5 TRIM SPEC</div>
-            </div>
+            </div>}
 
             {/* Preflight Finding with Magenta Margin Note & Caret */}
             <div
@@ -207,8 +249,7 @@ export function ProofViewer({
         ) : (
           /* INTERIOR PAGE LIGHT TABLE SHEET */
           <div
-            className="relative bg-white border border-[#0F1218] shadow-md p-6 flex flex-col justify-between"
-            style={{ width: '320px', height: '420px' }}
+            className="relative w-full max-w-[320px] aspect-[16/21] bg-white border border-[#0F1218] shadow-md p-4 sm:p-6 flex flex-col justify-between"
           >
             {/* Trim Safe Box (Cyan) */}
             {showTrimGuide && (
@@ -218,24 +259,31 @@ export function ProofViewer({
               />
             )}
 
-            <div className="flex justify-between text-[9px] font-mono text-[#5A6070]">
+            <div className="relative z-20 flex justify-between text-[9px] font-mono text-[#5A6070]">
               <span>Interior Proof</span>
               <span>Page {currentManuscriptPage} of {interiorPageCount}</span>
             </div>
 
-            <div className="space-y-3 my-auto px-4">
-              <div className="h-1.5 bg-[#0F1218] w-2/3" />
-              <div className="h-1 bg-[#5A6070] w-full" />
-              <div className="h-1 bg-[#5A6070] w-full" />
-              <div className="h-1 bg-[#5A6070] w-4/5" />
-              <div className="w-full h-24 border border-[#0F1218] bg-[#F7F9FC] flex items-center justify-center text-[9px] text-[#5A6070] relative">
-                <span>HALFTONE FIGURE</span>
-                {/* Preflight Caret on Page */}
-                <span className="absolute bottom-1 right-1 text-[#E4007C] font-bold text-sm">^</span>
+            {interiorPreviewUrl ? (
+              <img
+                src={interiorPreviewUrl}
+                alt={`Uploaded manuscript page ${currentManuscriptPage}: ${interiorFile?.name || 'interior artwork'}`}
+                className="pointer-events-none absolute inset-8 z-10 h-[calc(100%-4rem)] w-[calc(100%-4rem)] object-contain"
+              />
+            ) : (
+              <div className="relative z-20 space-y-3 my-auto px-4">
+                <div className="h-1.5 bg-[#0F1218] w-2/3" />
+                <div className="h-1 bg-[#5A6070] w-full" />
+                <div className="h-1 bg-[#5A6070] w-full" />
+                <div className="h-1 bg-[#5A6070] w-4/5" />
+                <div className="w-full h-24 border border-[#0F1218] bg-[#F7F9FC] flex items-center justify-center text-[9px] text-[#5A6070] relative">
+                  <span>HALFTONE FIGURE</span>
+                  <span className="absolute bottom-1 right-1 text-[#E4007C] font-bold text-sm">^</span>
+                </div>
+                <div className="h-1 bg-[#5A6070] w-full" />
+                <div className="h-1 bg-[#5A6070] w-3/4" />
               </div>
-              <div className="h-1 bg-[#5A6070] w-full" />
-              <div className="h-1 bg-[#5A6070] w-3/4" />
-            </div>
+            )}
 
             {/* Preflight Finding Margin Note (Change 4: Darker magenta #C70068) */}
             <div
@@ -250,7 +298,7 @@ export function ProofViewer({
               </p>
             </div>
 
-            <div className="text-[9px] font-mono text-[#5A6070] text-center">
+            <div className="relative z-20 text-[9px] font-mono text-[#5A6070] text-center">
               148 × 210 mm
             </div>
           </div>

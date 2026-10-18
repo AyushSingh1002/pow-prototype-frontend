@@ -59,6 +59,11 @@ export function ConfiguratorView({
   const [calculatingQuote, setCalculatingQuote] = useState(false);
   const [quote, setQuote] = useState<QuoteResponse | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [quoteRequestRevision, setQuoteRequestRevision] = useState(0);
+
+  const quoteOptions = currentProduct.id === 'books'
+    ? { ...options, pages: options.pages || '120', finish: options.finish || 'matte' }
+    : options;
 
   // Load option definitions
   useEffect(() => {
@@ -100,7 +105,7 @@ export function ConfiguratorView({
       try {
         const res = await createQuote({
           productId: currentProduct.id,
-          options,
+          options: quoteOptions,
           quantity,
         });
         if (isMounted) {
@@ -120,7 +125,7 @@ export function ConfiguratorView({
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [currentProduct.id, options, quantity]);
+  }, [currentProduct.id, options, quantity, quoteRequestRevision]);
 
   const handleOptionChange = (code: string, value: string) => {
     setOptions((prev) => ({ ...prev, [code]: value }));
@@ -134,7 +139,7 @@ export function ConfiguratorView({
 
   const handleContinue = () => {
     if (quote) {
-      onQuoteReady(quote, currentProduct, options, quantity);
+      onQuoteReady(quote, currentProduct, quoteOptions, quantity);
       onNavigate('upload');
     }
   };
@@ -288,7 +293,7 @@ export function ConfiguratorView({
                 quoteError={quoteError}
                 onRetry={() => {
                   setQuoteError(null);
-                  setCalculatingQuote(true);
+                  setQuoteRequestRevision((revision) => revision + 1);
                 }}
                 onContinue={handleContinue}
               />
@@ -312,7 +317,7 @@ export function ConfiguratorView({
                 quoteError={quoteError}
                 onRetry={() => {
                   setQuoteError(null);
-                  setCalculatingQuote(true);
+                  setQuoteRequestRevision((revision) => revision + 1);
                 }}
                 onContinue={handleContinue}
               />

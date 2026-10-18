@@ -30,12 +30,12 @@ export function QuestionsSection() {
   ];
 
   return (
-    <section className="py-20 sm:py-24 lg:py-28 border-t border-[#CBD0DA]" aria-label="Frequently asked questions">
+    <section className="py-16 sm:py-20 lg:py-24" aria-label="Frequently asked questions">
       <div className="proof-container">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
           {/* Left 4 Columns: Typographic Headline */}
           <div className="lg:col-span-4">
-            <span className="text-xs uppercase font-bold tracking-wider text-[#5A6070] block mb-2 font-mono">
+            <span className="text-xs font-semibold text-[#5A6070] block mb-2">
               SPECIFICATIONS &amp; FAQ
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold mb-3" style={{ fontFamily: 'var(--font-headline)' }}>
@@ -47,13 +47,14 @@ export function QuestionsSection() {
           </div>
 
           {/* Right 8 Columns: Clean Dividers & Newsreader Text */}
-          <div className="lg:col-span-8 divide-y divide-[#CBD0DA]">
+          <div className="lg:col-span-8 divide-y divide-[#CBD0DA] border-y border-[#CBD0DA]">
             {questions.map((faq, index) => {
               const isOpen = openIndex === index;
               return (
-                <div key={index} className="py-6">
+                <div key={index} className="py-5">
                   <button
                     onClick={() => setOpenIndex(isOpen ? null : index)}
+                    aria-controls={`faq-answer-${index}`}
                     className="w-full text-left flex justify-between items-center gap-6 cursor-pointer bg-transparent border-0 p-0 text-inherit group"
                     aria-expanded={isOpen}
                   >
@@ -71,13 +72,11 @@ export function QuestionsSection() {
                     </span>
                   </button>
 
-                  {isOpen && (
-                    <div className="pt-4 pr-6 sm:pr-12">
-                      <p className="reading-text text-base text-[#5A6070] leading-7 max-w-2xl">
-                        {faq.a}
-                      </p>
-                    </div>
-                  )}
+                  <div id={`faq-answer-${index}`} hidden={!isOpen} className="pt-3 pr-6 sm:pr-12">
+                    <p className="reading-text text-base text-[#5A6070] leading-7 max-w-2xl">
+                      {faq.a}
+                    </p>
+                  </div>
                 </div>
               );
             })}

@@ -33,24 +33,31 @@ export function ProcessPath({ fixedStation, isTrackingPage = false }: ProcessPat
   useEffect(() => {
     if (isTrackingPage || fixedStation) return;
 
+    let frame = 0;
     const handleScroll = () => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const totalScrollable = rect.height - windowHeight;
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        if (!containerRef.current) {
+          frame = 0;
+          return;
+        }
 
-      if (totalScrollable <= 0) return;
-
-      const progress = Math.min(
-        Math.max(-rect.top / totalScrollable, 0),
-        1
-      );
-      setScrollProgress(progress);
+        const rect = containerRef.current.getBoundingClientRect();
+        const totalScrollable = rect.height - window.innerHeight;
+        const rawProgress = totalScrollable > 0
+          ? Math.min(Math.max(-rect.top / totalScrollable, 0), 1)
+          : 0;
+        setScrollProgress(rawProgress * rawProgress * (3 - 2 * rawProgress));
+        frame = 0;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.cancelAnimationFrame(frame);
+    };
   }, [isTrackingPage, fixedStation]);
 
   const activeProgress = fixedStation ? fixedProgress : scrollProgress;
@@ -93,7 +100,7 @@ export function ProcessPath({ fixedStation, isTrackingPage = false }: ProcessPat
 
                 {/* Active Drawn Line */}
                 <div
-                  className="h-[2.5px] bg-[#0F1218] absolute top-[68px] left-0 z-0 transition-all duration-150"
+                  className="h-[2.5px] bg-[#0F1218] absolute top-[68px] left-0 z-0"
                   style={{
                     width: `${Math.min(activeProgress * 100, 100)}%`,
                   }}
@@ -101,7 +108,7 @@ export function ProcessPath({ fixedStation, isTrackingPage = false }: ProcessPat
 
                 {/* Travelling Mini Press Sheet on the Line */}
                 <div
-                  className="absolute top-[58px] -ml-3 z-20 transition-all duration-150 flex items-center justify-center w-6 h-6 bg-[#FDFDFC] border border-[#0F1218] shadow-[1px_1px_0_0_#0F1218]"
+                  className="absolute top-[58px] -ml-3 z-20 flex items-center justify-center w-6 h-6 bg-[#FDFDFC] border border-[#0F1218] shadow-[1px_1px_0_0_#0F1218]"
                   style={{
                     left: `${Math.min(Math.max(activeProgress * 100, 0), 98)}%`,
                   }}

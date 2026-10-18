@@ -18,13 +18,13 @@ export function HomeBulkSection() {
   };
 
   return (
-    <section className="py-20 sm:py-24 lg:py-28 border-t border-[#CBD0DA]" aria-label="Commercial and high-volume quote requests">
+    <section className="py-16 sm:py-20 lg:py-24" aria-label="Commercial and high-volume quote requests">
       <div className="proof-container">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
           {/* Left 5 Columns: Commercial Information & WhatsApp Direct */}
-          <div className="lg:col-span-5 space-y-7 lg:pr-4">
+          <div className="lg:col-span-5 space-y-6 lg:pr-4">
             <div>
-              <span className="text-xs uppercase font-bold tracking-wider text-[#5A6070] block mb-2 font-mono">
+              <span className="text-xs font-semibold text-[#5A6070] block mb-2">
                 HIGH-VOLUME RUNS
               </span>
               <h2 className="text-3xl sm:text-4xl font-bold mb-3" style={{ fontFamily: 'var(--font-headline)' }}>
@@ -35,11 +35,11 @@ export function HomeBulkSection() {
               </p>
             </div>
 
-            <div className="p-4 bg-white border border-[#CBD0DA] space-y-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#0F1218] block font-mono">
+            <div className="space-y-2.5">
+              <span className="text-xs font-semibold text-[#0F1218] block">
                 COMMERCIAL SERVICES
               </span>
-              <ul className="text-xs text-[#5A6070] space-y-2 list-none p-0 m-0 leading-relaxed">
+              <ul className="text-sm text-[#5A6070] space-y-1.5 list-none p-0 m-0 leading-relaxed">
                 <li>• Pre-press imposition review with physical blueline proofs</li>
                 <li>• Custom FSC-certified paper weights from 80 GSM to 350 GSM</li>
                 <li>• Palletized road freight to all Indian commercial hubs</li>
@@ -60,7 +60,7 @@ export function HomeBulkSection() {
 
           {/* Right 7 Columns: Form Sheet */}
           <div className="lg:col-span-7">
-            <div className="proof-sheet p-5 sm:p-8 lg:p-10 border border-[#0F1218]">
+            <div className="p-5 sm:p-7 lg:p-8 bg-white/70">
               {submitted ? (
                 <div className="p-8 bg-[#E8EAEE] border border-[#0F1218] text-center space-y-3">
                   <span className="sample-stamp">Demo request received</span>
@@ -70,15 +70,15 @@ export function HomeBulkSection() {
                   </p>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="border-b border-[#0F1218] pb-3 mb-6 flex justify-between items-baseline">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="pb-1 mb-2 flex justify-between items-baseline gap-4">
                     <h3 className="text-lg font-bold" style={{ fontFamily: 'var(--font-headline)' }}>
                       Commercial Request Specification
                     </h3>
-                    <span className="sample-stamp">Sample form</span>
+                    <span className="sample-stamp relative right-2">Sample form</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
                     <div>
                       <label className="text-xs font-semibold text-[#0F1218] block mb-2">
                         Product type
@@ -86,7 +86,7 @@ export function HomeBulkSection() {
                       <select
                         value={formData.product}
                         onChange={(e) => setFormData({ ...formData, product: e.target.value })}
-                        className="w-full p-2.5 bg-white border border-[#0F1218] text-sm rounded-[var(--control-radius)]"
+                        className="w-full p-2.5 mt-1 bg-white border border-[#CBD0DA] text-sm rounded-[var(--control-radius)]"
                       >
                         <option value="books">Hardcover &amp; Paperback Books</option>
                         <option value="brochures">Folded Brochures &amp; Catalogs</option>
@@ -105,7 +105,7 @@ export function HomeBulkSection() {
                         step="100"
                         value={formData.quantity}
                         onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                        className="w-full p-2.5 bg-white border border-[#0F1218] text-sm rounded-[var(--control-radius)] tabular-nums"
+                        className="w-full p-2.5 mt-1 bg-white border border-[#CBD0DA] text-sm rounded-[var(--control-radius)] tabular-nums"
                       >
                       </input>
                     </div>
@@ -119,7 +119,7 @@ export function HomeBulkSection() {
                         min="1"
                         value={formData.pages}
                         onChange={(e) => setFormData({ ...formData, pages: e.target.value })}
-                        className="w-full p-2.5 bg-white border border-[#0F1218] text-sm rounded-[var(--control-radius)] tabular-nums"
+                        className="w-full p-2.5 mt-1 bg-white border border-[#CBD0DA] text-sm rounded-[var(--control-radius)] tabular-nums"
                       >
                       </input>
                     </div>
@@ -131,7 +131,7 @@ export function HomeBulkSection() {
                       <select
                         value={formData.deadline}
                         onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                        className="w-full p-2.5 bg-white border border-[#0F1218] text-sm rounded-[var(--control-radius)]"
+                        className="w-full p-2.5 mt-1 bg-white border border-[#CBD0DA] text-sm rounded-[var(--control-radius)]"
                       >
                         <option value="7 days">Express (7 working days)</option>
                         <option value="14 days">Standard (14 working days)</option>
@@ -149,7 +149,7 @@ export function HomeBulkSection() {
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       placeholder="Specify paper GSM, foil stamping, spot UV or custom carton delivery requirements..."
-                      className="w-full p-2.5 bg-white border border-[#0F1218] text-sm rounded-[var(--control-radius)]"
+                      className="w-full p-2.5 mt-1 bg-white border border-[#CBD0DA] text-sm rounded-[var(--control-radius)]"
                     />
                   </div>
 

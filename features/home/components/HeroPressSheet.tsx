@@ -16,19 +16,32 @@ export function HeroPressSheet({ onNavigate, onSelectProduct }: HeroPressSheetPr
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(media.matches);
 
+    let frame = 0;
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        setScrollY(window.scrollY);
+        frame = 0;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleMotionPreference = (event: MediaQueryListEvent) => {
+      setPrefersReducedMotion(event.matches);
+    };
+    media.addEventListener('change', handleMotionPreference);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      media.removeEventListener('change', handleMotionPreference);
+      window.cancelAnimationFrame(frame);
+    };
   }, []);
 
-  // Scroll effect 1: lifts 40px, straightens from 1.5 to 0.5deg, plates drift 0 to 4px
-  const scrollRatio = Math.min(Math.max(scrollY / 500, 0), 1);
-  const sheetLift = prefersReducedMotion ? 0 : scrollRatio * -40;
-  const sheetRotation = prefersReducedMotion ? 1.5 : 1.5 - scrollRatio * 1.0;
-  const plateDrift = prefersReducedMotion ? 0 : scrollRatio * 3.5;
+  const rawScrollRatio = Math.min(Math.max(scrollY / 520, 0), 1);
+  const scrollRatio = rawScrollRatio * rawScrollRatio * (3 - 2 * rawScrollRatio);
+  const sheetLift = prefersReducedMotion ? 0 : scrollRatio * -24;
+  const sheetRotation = prefersReducedMotion ? 0 : 0.8 - scrollRatio * 0.8;
+  const plateOpacity = prefersReducedMotion ? 0 : scrollRatio * 0.24;
 
   return (
     <section className="pt-10 sm:pt-16 lg:pt-20 pb-16 sm:pb-24 lg:pb-32 overflow-hidden relative">
@@ -67,11 +80,11 @@ export function HeroPressSheet({ onNavigate, onSelectProduct }: HeroPressSheetPr
             style={{
               transform: `translateY(${sheetLift}px) rotate(${sheetRotation}deg)`,
               transformOrigin: 'top right',
-              transition: prefersReducedMotion ? 'none' : 'transform 100ms ease-out',
+              transition: 'none',
             }}
           >
             <div
-              className="proof-sheet p-5 sm:p-7 md:p-8 w-full max-w-[820px] min-h-[430px] sm:min-h-[560px] md:min-h-[620px] flex flex-col justify-between"
+              className="proof-sheet hero-sheet-motion p-5 sm:p-7 md:p-8 w-full max-w-[820px] min-h-[430px] sm:min-h-[560px] md:min-h-[620px] flex flex-col justify-between"
               style={{
                 backgroundColor: 'var(--sheet)',
                 border: '1.5px solid var(--key)',
@@ -99,13 +112,11 @@ export function HeroPressSheet({ onNavigate, onSelectProduct }: HeroPressSheetPr
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                   style={{
-                    transform: `translate(${plateDrift}px, ${plateDrift * 0.5}px)`,
-                    opacity: scrollRatio > 0.05 ? 0.35 : 0,
-                    transition: 'opacity 150ms ease, transform 100ms ease-out',
+                    opacity: plateOpacity,
                   }}
                 >
-                  <rect x="15" y="15" width="570" height="290" stroke="var(--cyan)" strokeWidth="1" strokeDasharray="3 3" />
-                  <rect x="17" y="17" width="566" height="286" stroke="var(--magenta)" strokeWidth="1" strokeDasharray="3 3" />
+                  <rect className="hero-plate-cyan" x="15" y="15" width="570" height="290" stroke="var(--cyan)" strokeWidth="1" strokeDasharray="3 3" />
+                  <rect className="hero-plate-magenta" x="17" y="17" width="566" height="286" stroke="var(--magenta)" strokeWidth="1" strokeDasharray="3 3" />
                 </svg>
 
                 {/* Top Row: Pages 5, 12, 9, 8 (Upside down, rotated 180deg) */}

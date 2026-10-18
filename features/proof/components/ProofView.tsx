@@ -122,7 +122,7 @@ export function ProofView({
           </p>
         </div>
 
-        <div className="crop-marked proof-sheet p-6 md:p-12 border border-[#0F1218] bg-[#FDFDFC]">
+        <div className="crop-marked proof-sheet p-3 sm:p-6 md:p-12 border border-[#0F1218] bg-[#FDFDFC]">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             <div className="lg:col-span-8">
               <ProofViewer

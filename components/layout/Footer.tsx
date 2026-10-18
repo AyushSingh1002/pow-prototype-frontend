@@ -14,8 +14,9 @@ export function Footer({ onNavigate: propNavigate }: FooterProps) {
 
   return (
     <footer
-      className="w-full mt-28 pt-16 pb-12 border-t"
+      className="w-full mt-16 sm:mt-20 pt-14 pb-12 border-t"
       style={{
+        marginTop: 'clamp(48px, 6vw, 80px)',
         backgroundColor: 'var(--sheet)',
         borderColor: 'var(--key)',
         color: 'var(--key)',
@@ -146,19 +147,11 @@ export function Footer({ onNavigate: propNavigate }: FooterProps) {
           </div>
         </div>
 
-        {/* Independence Line and Final Process Colour Bar Rule */}
+        {/* Independence line */}
         <div className="pt-8 border-t flex flex-col md:flex-row items-start md:items-center justify-between gap-6" style={{ borderColor: 'var(--key)' }}>
           <p className="text-xs max-w-2xl" style={{ color: 'var(--key-soft)' }}>
             Independent concept redesign. Not affiliated with, endorsed by or connected to PrintOnWeb.
           </p>
-
-          {/* Process Colour Bar as Final Rule */}
-          <div className="flex items-center gap-1.5" aria-label="Process color calibration bar">
-            <span className="cmyk-swatch c" title="Cyan plate" />
-            <span className="cmyk-swatch m" title="Magenta plate" />
-            <span className="cmyk-swatch y" title="Yellow plate" />
-            <span className="cmyk-swatch k" title="Key plate" />
-          </div>
         </div>
       </div>
     </footer>

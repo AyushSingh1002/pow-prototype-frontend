@@ -71,9 +71,11 @@ export function UploadSlotCard({
 
       <input
         ref={inputRef}
+        id={`artwork-${slot.id}`}
         type="file"
         accept={slot.acceptedExtensions ? slot.acceptedExtensions.join(',') : '.pdf,.tiff,.jpg,.jpeg,.png'}
         className="hidden"
+        aria-label={`Select ${slot.title}`}
         onChange={(e) => {
           if (e.target.files && e.target.files[0]) {
             onUpload(slot, e.target.files[0]);
@@ -105,7 +107,11 @@ export function UploadSlotCard({
               {slotData.metadata?.numPages !== undefined && (
                 <span>{slotData.metadata.numPages} pages detected</span>
               )}
-              <span className="text-[#00628F] font-sans font-semibold">Preflight passed</span>
+              <span className="text-[#5A6070] font-sans font-semibold" aria-live="polite">
+                {slotData.uploadResponse && !slotData.uploadResponse.isDemo
+                  ? 'Upload registered'
+                  : 'Local preview only · not uploaded'}
+              </span>
             </div>
           </div>
 
@@ -134,6 +140,15 @@ export function UploadSlotCard({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              inputRef.current?.click();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label={`${slot.dropzoneLabel}. ${isRequired ? 'Required.' : 'Optional.'}`}
           className="p-8 border-2 border-dashed cursor-pointer transition-colors duration-150 text-center flex flex-col items-center justify-center gap-2"
           style={{
             borderColor: error ? 'var(--error)' : isDragOver ? 'var(--cyan)' : 'var(--key)',

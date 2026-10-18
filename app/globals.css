@@ -42,10 +42,10 @@ html {
 }
 
 /* Base Light Table Setup */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  *, ::before, ::after {
+    box-sizing: border-box;
+  }
 }
 
 html {
@@ -73,23 +73,23 @@ h1, h2, h3, h4 {
   font-weight: 650;
   font-stretch: 115%;
   font-variation-settings: "wdth" 115, "wght" 650;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   line-height: 1.02;
   color: var(--key);
   text-transform: none;
 }
 
 h1 {
-  font-size: clamp(2.5rem, 6.5vw, 5.25rem);
+  font-size: 46px;
 }
 
 h2 {
-  font-size: clamp(1.75rem, 4vw, 3rem);
+  font-size: 36px;
   line-height: 1.08;
 }
 
 h3 {
-  font-size: clamp(1.25rem, 2.5vw, 1.85rem);
+  font-size: 24px;
   line-height: 1.18;
 }
 
@@ -97,8 +97,8 @@ h3 {
 .reading-text,
 p.reading-text {
   font-family: var(--font-reading);
-  font-size: 18px;
-  line-height: 1.6;
+  font-size: 17px;
+  line-height: 1.65;
   max-width: 66ch;
   text-align: left;
   color: var(--key);
@@ -143,8 +143,8 @@ p.reading-text {
 
 .btn-proof-primary:hover {
   background-color: #0884bd;
-  transform: translateY(-2px);
-  box-shadow: 3px 3px 0 0 var(--key);
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 0 0 var(--key);
 }
 
 .btn-proof-primary:focus-visible,
@@ -177,8 +177,8 @@ p.reading-text {
 
 .btn-proof-secondary:hover {
   background-color: #F0F2F6;
-  transform: translateY(-2px);
-  box-shadow: 3px 3px 0 0 var(--key);
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 0 0 var(--key);
 }
 
 .btn-proof-secondary:active {
@@ -225,6 +225,37 @@ a:focus-visible {
   border-radius: 0px;
   border: 1px solid var(--key);
   position: relative;
+}
+
+.hero-sheet-motion {
+  animation: hero-sheet-settle 760ms var(--ease-print) both;
+}
+
+.hero-plate-cyan {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hero-plate-cyan-register 430ms var(--ease-print) 180ms both;
+}
+
+.hero-plate-magenta {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hero-plate-magenta-register 430ms var(--ease-print) 330ms both;
+}
+
+@keyframes hero-sheet-settle {
+  from { transform: translateY(18px) rotate(-1deg) scale(0.985); }
+  to { transform: translateY(0) rotate(0) scale(1); }
+}
+
+@keyframes hero-plate-cyan-register {
+  from { transform: translate(-3px, -2px); opacity: 0.35; }
+  to { transform: translate(0, 0); opacity: 0.8; }
+}
+
+@keyframes hero-plate-magenta-register {
+  from { transform: translate(3px, 2px); opacity: 0.25; }
+  to { transform: translate(0, 0); opacity: 0.8; }
 }
 
 /* Crop Marks for Worked-on Sheets */
@@ -451,27 +482,20 @@ a:focus-visible {
 .proof-container {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0 clamp(20px, 4vw, 64px);
+  padding: 0 clamp(20px, 4vw, 56px);
   width: 100%;
-}
-
-main > section {
-  animation: section-enter 700ms var(--ease-print) both;
-}
-
-main > section:nth-child(2n) {
-  animation-delay: 60ms;
-}
-
-@keyframes section-enter {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .grid-12 {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: clamp(16px, 2.5vw, 32px);
+}
+
+@media (max-width: 767px) {
+  h1 { font-size: 38px; }
+  h2 { font-size: 30px; }
+  h3 { font-size: 22px; }
 }
 
 /* Reduced Motion Override */

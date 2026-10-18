@@ -253,10 +253,10 @@ export function UploadView({
         <div className="border-b border-[#0F1218] pb-4 mb-8">
           <div className="flex justify-between items-baseline flex-wrap gap-2">
             <h1>Upload Print Artwork</h1>
-            <span className="sample-stamp">Preflight check</span>
+            <span className="sample-stamp">Local preview</span>
           </div>
           <p className="reading-text-soft text-sm mt-1">
-            Files undergo automatic preflight verification for trim geometry, bleed margins and ink gamut.
+            Files are previewed in this browser. Remote artwork storage and server preflight are not configured.
           </p>
         </div>
 

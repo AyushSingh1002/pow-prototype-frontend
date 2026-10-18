@@ -13,12 +13,12 @@ export function PreflightChecklist({ validationResults, product }: PreflightChec
   return (
     <aside className="proof-sheet p-6 border border-[#0F1218] bg-white space-y-4">
       <div className="border-b border-[#0F1218] pb-3">
-        <span className="sample-stamp">Automated check</span>
+        <span className="sample-stamp">Browser checks</span>
         <h3 className="text-lg font-bold mt-2" style={{ fontFamily: 'var(--font-headline)' }}>
-          Preflight verification
+          File checks
         </h3>
         <p className="reading-text-soft text-xs mt-1">
-          Automated evaluation for {product?.name || 'print job'}.
+          Local checks for {product?.name || 'print job'}; files are not sent to production preflight.
         </p>
       </div>
 
@@ -60,7 +60,7 @@ export function PreflightChecklist({ validationResults, product }: PreflightChec
       </div>
 
       <p className="text-[11px] text-[#5A6070] pt-2 border-t border-[#CBD0DA]">
-        Preflight inspects aspect ratio, page counts and bleed allowances.
+        Checks inspect available file metadata only. No server-side artwork validation is configured.
       </p>
     </aside>
   );

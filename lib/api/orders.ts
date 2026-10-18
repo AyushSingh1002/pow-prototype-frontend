@@ -5,18 +5,16 @@ import { getApiBase, handleResponse } from './client';
 export async function createDraftOrder(payload: {
   quoteId: string;
   idempotencyKey?: string;
-  token?: string;
+  token: string;
 }): Promise<{ id: string; status: string }> {
   const idempotencyKey =
     payload.idempotencyKey ||
     `idem_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  const token = payload.token || 'demo-token';
-
   const res = await fetch(`${getApiBase()}/api/orders`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${payload.token}`,
       'Idempotency-Key': idempotencyKey,
       Accept: 'application/json',
     },
@@ -28,7 +26,7 @@ export async function createDraftOrder(payload: {
 /** Lookup order details and audit status history */
 export async function getOrder(
   orderId: string,
-  token: string = 'demo-token'
+  token: string
 ): Promise<OrderLookupResponse> {
   const res = await fetch(`${getApiBase()}/api/orders/${encodeURIComponent(orderId)}`, {
     headers: {

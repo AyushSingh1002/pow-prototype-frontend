@@ -17,7 +17,7 @@ export interface RenderResult {
   detectedLayout?: ArtworkLayoutType;
 }
 
-export async function generateArtworkPreview(file: File): Promise<RenderResult> {
+export async function generateArtworkPreview(file: File, pageNumber = 1): Promise<RenderResult> {
   const fileType = file.type.toLowerCase();
   const fileName = file.name.toLowerCase();
 
@@ -93,7 +93,7 @@ export async function generateArtworkPreview(file: File): Promise<RenderResult> 
 
       const pdf = await loadingTask.promise;
       const numPages = pdf.numPages || 1;
-      const page = await pdf.getPage(1);
+      const page = await pdf.getPage(Math.min(Math.max(pageNumber, 1), numPages));
       const nativeViewport = page.getViewport({ scale: 1.0 });
       const width = nativeViewport.width;
       const height = nativeViewport.height;
