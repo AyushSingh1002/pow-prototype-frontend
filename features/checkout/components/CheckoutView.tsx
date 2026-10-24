@@ -10,6 +10,7 @@ import {
 import { useOrderFlow } from '../../../context/OrderFlowContext';
 import { useAuth } from '../../../context/AuthContext';
 import { createDraftOrder, processDemoCheckout } from '../../../lib/api';
+import { formatPriceFromPaise } from '../../../lib/formatters';
 import { FlowStepper } from '../../../components/layout/FlowStepper';
 import { Footer } from '../../../components/layout/Footer';
 
@@ -63,9 +64,46 @@ export function CheckoutView({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const validateDeliveryAddress = () => {
+    const name = deliveryAddress.name.trim();
+    const phone = deliveryAddress.phone.trim();
+    const address = deliveryAddress.address.trim();
+    const city = deliveryAddress.city.trim();
+    const pincode = deliveryAddress.pincode.trim();
+
+    if (!name || name.length < 2) {
+      return 'Please enter the contact name.';
+    }
+
+    if (!/^((\+91|91|0)?[6-9]\d{9})$/.test(phone.replace(/\s+/g, ''))) {
+      return 'Please enter a valid Indian mobile number.';
+    }
+
+    if (!address || address.length < 8) {
+      return 'Please enter a complete delivery address.';
+    }
+
+    if (!city || city.length < 2) {
+      return 'Please enter a valid city name.';
+    }
+
+    if (!/^\d{6}$/.test(pincode)) {
+      return 'Please enter a valid 6-digit Indian PIN code.';
+    }
+
+    return null;
+  };
+
   const handlePlaceDemoOrder = async () => {
-    setIsSubmitting(true);
     setError(null);
+
+    const validationError = validateDeliveryAddress();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       if (!quote?.id) {
@@ -93,15 +131,6 @@ export function CheckoutView({
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const formatPrice = (paiseOrRupees: number) => {
-    const val = paiseOrRupees > 5000 ? Math.round(paiseOrRupees / 100) : paiseOrRupees;
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(val);
   };
 
   return (
@@ -267,7 +296,7 @@ export function CheckoutView({
                   <div key={idx} className="flex justify-between py-0.5 text-[#5A6070]">
                     <span>{li.description}</span>
                     <span className="tabular-nums font-medium text-[#0F1218]">
-                      {formatPrice(li.lineTotal)}
+                      {formatPriceFromPaise(li.lineTotal)}
                     </span>
                   </div>
                 ))}
@@ -277,7 +306,7 @@ export function CheckoutView({
                     Illustrative total
                   </span>
                   <span className="text-2xl font-extrabold tabular-nums text-[#0F1218]">
-                    {quote ? formatPrice(quote.total) : 'No valid quote'}
+                    {quote ? formatPriceFromPaise(quote.total) : 'No valid quote'}
                   </span>
                 </div>
               </div>

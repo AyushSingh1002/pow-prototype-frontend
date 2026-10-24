@@ -130,16 +130,9 @@ export async function generateArtworkPreview(file: File, pageNumber = 1): Promis
       };
     } catch (err: any) {
       console.warn('PDF first-page rendering warning:', err);
-      const fallbackUrl = URL.createObjectURL(file);
-      return {
-        previewUrl: fallbackUrl,
-        numPages: 1,
-        isObjectUrl: true,
-        width: 0,
-        height: 0,
-        aspectRatio: 1,
-        detectedLayout: 'unknown',
-      };
+      throw err instanceof Error
+        ? err
+        : new Error('Unable to render the PDF preview.');
     }
   }
 

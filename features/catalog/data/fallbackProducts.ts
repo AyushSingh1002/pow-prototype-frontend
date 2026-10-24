@@ -51,7 +51,7 @@ export const fallbackProducts: Product[] = [
     description:
       'Standard 3.5x2 inch high-definition visiting cards on premium stock with optional lamination and spot UV.',
     isActive: true,
-    minQuantity: 50,
+    minQuantity: 10,
     maxQuantity: 10000,
     sampleStartingPrice: 300,
     currency: 'INR',
@@ -65,7 +65,7 @@ export const fallbackProducts: Product[] = [
     description:
       'Laser & inkjet friendly official stationery printed on executive watermark bond or ultra-smooth card.',
     isActive: true,
-    minQuantity: 50,
+    minQuantity: 10,
     maxQuantity: 5000,
     sampleStartingPrice: 400,
     currency: 'INR',
@@ -79,7 +79,7 @@ export const fallbackProducts: Product[] = [
     description:
       'Full-color promotional flyers printed on crisp gloss or matte paper, available with bi-fold or tri-fold.',
     isActive: true,
-    minQuantity: 100,
+    minQuantity: 10,
     maxQuantity: 25000,
     sampleStartingPrice: 450,
     currency: 'INR',
@@ -93,7 +93,7 @@ export const fallbackProducts: Product[] = [
     description:
       'Weather-resistant custom cut vinyl stickers on white or transparent stock with vibrant pigment inks.',
     isActive: true,
-    minQuantity: 25,
+    minQuantity: 10,
     maxQuantity: 5000,
     sampleStartingPrice: 600,
     currency: 'INR',

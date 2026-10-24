@@ -52,10 +52,10 @@ export function ConfiguratorView({
   const [options, setOptions] = useState<Record<string, string>>({});
   const [printOptions, setPrintOptions] = useState<PrintOption[]>([]);
   const [quantity, setQuantity] = useState<number>(10);
-  const [interiorColour, setInteriorColour] = useState<'bw' | 'colour'>('bw');
   const [pinCode, setPinCode] = useState<string>('110001');
   const [pinValid, setPinValid] = useState<boolean>(true);
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const [optionsError, setOptionsError] = useState<string | null>(null);
   const [calculatingQuote, setCalculatingQuote] = useState(false);
   const [quote, setQuote] = useState<QuoteResponse | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
@@ -64,14 +64,27 @@ export function ConfiguratorView({
   const quoteOptions = currentProduct.id === 'books'
     ? { ...options, pages: options.pages || '120', finish: options.finish || 'matte' }
     : options;
+  const configuredOptions = printOptions;
 
   // Load option definitions
   useEffect(() => {
     let isMounted = true;
+    setQuote(null);
+    setQuoteError(null);
+    setOptionsError(null);
+    setPrintOptions([]);
+    setOptions({});
+    setQuantity((currentQuantity) =>
+      Math.max(currentProduct.minQuantity, Math.min(currentProduct.maxQuantity, currentQuantity))
+    );
+
     async function loadOptions() {
       setLoadingOptions(true);
       try {
         const fetched = await fetchPrintOptions(currentProduct.id);
+        if (fetched.length === 0) {
+          throw new Error(`No print configuration is available for ${currentProduct.name}.`);
+        }
         if (isMounted) {
           setPrintOptions(fetched);
           const defaultOpts: Record<string, string> = {};
@@ -80,10 +93,22 @@ export function ConfiguratorView({
               defaultOpts[opt.code] = opt.choices[0].value;
             }
           });
+          if (currentProduct.id === 'books') {
+            defaultOpts.pages = '120';
+          }
           setOptions(defaultOpts);
         }
       } catch (err) {
-        console.warn('Using fallback options', err);
+        console.error('Unable to load product configuration:', err);
+        if (isMounted) {
+          setPrintOptions([]);
+          setOptions({});
+          setOptionsError(
+            err instanceof Error
+              ? err.message
+              : `Unable to load configuration for ${currentProduct.name}.`
+          );
+        }
       } finally {
         if (isMounted) setLoadingOptions(false);
       }
@@ -92,7 +117,7 @@ export function ConfiguratorView({
     return () => {
       isMounted = false;
     };
-  }, [currentProduct.id]);
+  }, [currentProduct.id, currentProduct.minQuantity, currentProduct.maxQuantity, currentProduct.name]);
 
   // Recalculate quote
   useEffect(() => {
@@ -179,7 +204,12 @@ export function ConfiguratorView({
                 </div>
               ) : (
                 <>
-                  {printOptions.map((opt) => (
+                  {optionsError && (
+                    <p className="text-sm text-[#C4161C]" role="alert">
+                      {optionsError}
+                    </p>
+                  )}
+                  {configuredOptions.map((opt) => (
                     <OptionSelector
                       key={opt.code}
                       option={opt}
@@ -188,66 +218,11 @@ export function ConfiguratorView({
                     />
                   ))}
 
-                  {/* Interior Colour Selector (Change 6) */}
-                  <div className="py-6 border-b border-[#CBD0DA]">
-                    <div className="flex justify-between items-baseline mb-4">
-                      <label className="text-base font-bold text-[#0F1218]" style={{ fontFamily: 'var(--font-headline)' }}>
-                        Interior printing colour
-                      </label>
-                      <span className="text-xs text-[#5A6070]">
-                        {interiorColour === 'colour' ? 'Full CMYK colour' : 'Monochrome black & white'}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setInteriorColour('bw')}
-                        className={`p-3 text-left border cursor-pointer transition-all duration-150 relative bg-white ${
-                          interiorColour === 'bw'
-                            ? 'border-[#0F1218] ring-1 ring-[#0F1218]'
-                            : 'border-[#CBD0DA]'
-                        }`}
-                      >
-                        <span className="text-xs font-bold block text-[#0F1218]">Black &amp; white</span>
-                        <span className="text-[11px] text-[#5A6070] block mt-0.5">High-contrast text &amp; line art</span>
-                        {interiorColour === 'bw' && (
-                          <>
-                            <span className="absolute top-0.5 left-0.5 w-1.5 h-1.5 border-t border-l border-[#0F1218] pointer-events-none" />
-                            <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 border-t border-r border-[#0F1218] pointer-events-none" />
-                            <span className="absolute bottom-0.5 left-0.5 w-1.5 h-1.5 border-b border-l border-[#0F1218] pointer-events-none" />
-                            <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 border-b border-r border-[#0F1218] pointer-events-none" />
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setInteriorColour('colour')}
-                        className={`p-3 text-left border cursor-pointer transition-all duration-150 relative bg-white ${
-                          interiorColour === 'colour'
-                            ? 'border-[#0F1218] ring-1 ring-[#0F1218]'
-                            : 'border-[#CBD0DA]'
-                        }`}
-                      >
-                        <span className="text-xs font-bold block text-[#0F1218]">Full colour CMYK</span>
-                        <span className="text-[11px] text-[#5A6070] block mt-0.5">Pigment reproduction for photos</span>
-                        {interiorColour === 'colour' && (
-                          <>
-                            <span className="absolute top-0.5 left-0.5 w-1.5 h-1.5 border-t border-l border-[#0F1218] pointer-events-none" />
-                            <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 border-t border-r border-[#0F1218] pointer-events-none" />
-                            <span className="absolute bottom-0.5 left-0.5 w-1.5 h-1.5 border-b border-l border-[#0F1218] pointer-events-none" />
-                            <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 border-b border-r border-[#0F1218] pointer-events-none" />
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
                   {/* Quantity Selector */}
                   <div className="py-6 border-b border-[#CBD0DA]">
                     <QuantitySelector
                       quantity={quantity}
+                      product={currentProduct}
                       onChange={setQuantity}
                     />
                   </div>
@@ -277,13 +252,14 @@ export function ConfiguratorView({
 
             {/* Right 5 Columns: Sticky Live Book Preview & Rolling Estimate on Desktop */}
             <div className="hidden lg:block lg:col-span-5 space-y-6 sticky top-24">
-              <LiveBookPreview
+              <ProductConfigurationPreview
+                product={currentProduct}
+                printOptions={printOptions}
+                options={options}
                 format={formatChoice}
                 binding={bindingChoice}
                 pageCount={pageCountChoice}
                 coverFinish={finishChoice}
-                interiorColour={interiorColour}
-                title={currentProduct.name}
               />
 
               <QuoteBreakdown
@@ -301,13 +277,14 @@ export function ConfiguratorView({
 
             {/* Mobile View: Inline Preview and Breakdown below options */}
             <div className="lg:hidden space-y-6 pt-6 border-t border-[#CBD0DA]">
-              <LiveBookPreview
+              <ProductConfigurationPreview
+                product={currentProduct}
+                printOptions={printOptions}
+                options={options}
                 format={formatChoice}
                 binding={bindingChoice}
                 pageCount={pageCountChoice}
                 coverFinish={finishChoice}
-                interiorColour={interiorColour}
-                title={currentProduct.name}
               />
 
               <QuoteBreakdown
@@ -356,6 +333,70 @@ export function ConfiguratorView({
 
       <Footer onNavigate={onNavigate} />
     </div>
+  );
+}
+
+interface ProductConfigurationPreviewProps {
+  product: Product;
+  printOptions: PrintOption[];
+  options: Record<string, string>;
+  format: string;
+  binding: string;
+  pageCount: number;
+  coverFinish: string;
+}
+
+function ProductConfigurationPreview({
+  product,
+  printOptions,
+  options,
+  format,
+  binding,
+  pageCount,
+  coverFinish,
+}: ProductConfigurationPreviewProps) {
+  if (product.id === 'books') {
+    const normalizedBinding = binding === 'paperback'
+      ? 'perfect_bound'
+      : binding.replace(/-/g, '_');
+
+    return (
+      <LiveBookPreview
+        format={format.includes('a4') ? 'a4' : format.includes('b5') ? 'b5' : 'a5'}
+        binding={normalizedBinding}
+        pageCount={pageCount}
+        coverFinish={coverFinish.replace(/-/g, '_')}
+        interiorColour={options.interior === 'full-colour' ? 'colour' : 'bw'}
+        title={product.name}
+      />
+    );
+  }
+
+  return (
+    <aside className="proof-sheet p-6 border border-[#0F1218] bg-white">
+      <div className="border-b border-[#0F1218] pb-3 mb-3">
+        <span className="sample-stamp">Format preview</span>
+        <h3 className="text-lg font-bold mt-2" style={{ fontFamily: 'var(--font-headline)' }}>
+          {product.name}
+        </h3>
+        <p className="reading-text-soft text-xs mt-1">{product.description}</p>
+      </div>
+      <dl className="divide-y divide-[#CBD0DA]">
+        {printOptions.map((option) => {
+          const selectedChoice = option.choices.find(
+            (choice) => choice.value === options[option.code]
+          );
+          return (
+            <div key={option.code} className="flex justify-between gap-4 py-2 text-xs">
+              <dt className="text-[#5A6070]">{option.name}</dt>
+              <dd className="text-right font-semibold text-[#0F1218]">
+                {selectedChoice?.label || 'Select an option'}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+    </aside>
   );
 }
 

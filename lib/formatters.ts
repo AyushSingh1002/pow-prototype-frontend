@@ -1,11 +1,8 @@
-/**
- * Format an integer paise value or a rupee value into Indian Rupee format.
- * @param paiseOrRupees Value in either minor units (paise) or rupees
- * @param isPaise Whether the input is in paise (100 paise = 1 INR)
- */
-export function money(paiseOrRupees: number, isPaise = false): string {
-  const rupees = isPaise ? Math.round(paiseOrRupees / 100) : paiseOrRupees;
-  return `₹${rupees.toLocaleString('en-IN')}`;
+export function formatPriceFromPaise(amountPaise: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+  }).format(amountPaise / 100);
 }
 
 /**

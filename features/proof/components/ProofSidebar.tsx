@@ -3,6 +3,7 @@
 import React from 'react';
 import { QuoteResponse, Product, StorefrontPage } from '../../../types';
 import { CoverSpreadCalculation, ArtworkLayoutType } from '../../../lib/coverSpread';
+import { formatPriceFromPaise } from '../../../lib/formatters';
 
 interface ProofSidebarProps {
   quote: QuoteResponse | null;
@@ -32,15 +33,6 @@ export function ProofSidebar({
   onSetProofApproved,
   onNavigate,
 }: ProofSidebarProps) {
-  const formatPrice = (paiseOrRupees: number) => {
-    const val = paiseOrRupees > 5000 ? Math.round(paiseOrRupees / 100) : paiseOrRupees;
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
-
   return (
     <aside className="proof-sheet p-6 border border-[#0F1218] bg-white sticky top-24 space-y-6">
       {/* Header */}
@@ -87,7 +79,7 @@ export function ProofSidebar({
         <div className="flex justify-between items-baseline pt-3">
           <span className="text-sm font-bold text-[#0F1218]">Sample total</span>
           <span className="text-2xl font-extrabold tabular-nums text-[#0F1218]">
-            {formatPrice(quote?.total || 2631)}
+            {formatPriceFromPaise(quote?.total || 263100)}
           </span>
         </div>
       </div>

@@ -4,6 +4,8 @@
  * preview behaviors, and preflight validation checks for every product type.
  */
 
+import type { ArtworkLayoutType } from './coverSpread';
+
 export type ProductWorkflowType =
   | 'books'
   | 'certificates'
@@ -50,7 +52,8 @@ export interface UploadedSlotData {
     height?: number;
     aspectRatio?: number;
     numPages?: number;
-    detectedLayout?: string;
+    detectedLayout?: ArtworkLayoutType;
+    previewFailed?: boolean;
   };
   uploadResponse?: any;
 }
@@ -1243,60 +1246,7 @@ export const productUploadConfigs: Record<string, ProductUploadConfig> = {
   },
 };
 
-/**
- * Returns the ProductUploadConfig for a given productId.
- * Falls back to a clean single-sheet configuration if productId is not found.
- */
-export function getProductUploadConfig(productId?: string): ProductUploadConfig {
-  if (productId && productUploadConfigs[productId]) {
-    return productUploadConfigs[productId];
-  }
-
-  // Default fallback configuration
-  return {
-    productId: productId || 'custom-print',
-    workflowType: 'posters',
-    category: 'custom',
-    title: 'Upload artwork',
-    subtitle: 'Upload your print-ready document or artwork file.',
-    slots: [
-      {
-        id: 'primary',
-        title: 'Print-ready artwork',
-        subtitle: 'Upload the print-ready artwork file in PDF or high-resolution image format.',
-        dropzoneLabel: 'Drop artwork here or browse',
-        buttonLabel: 'Select Artwork File',
-        role: 'primary',
-        required: true,
-        acceptedExtensions: ['.pdf', '.png', '.jpg', '.jpeg', '.tiff'],
-        acceptedMimeTypes: ['application/pdf', 'image/png', 'image/jpeg', 'image/tiff'],
-        formatHelpText: 'Supported formats: PDF, PNG, JPEG, TIFF up to 250MB',
-        maxSizeBytes: DEFAULT_MAX_SIZE,
-      },
-    ],
-    preview: {
-      type: 'poster',
-      hasManuscriptNav: false,
-      hasCoverSpread: false,
-      hasFrontBackToggle: false,
-      containerLabel: 'CUSTOM PRINT PROOF',
-      guidelineLabels: {
-        bleed: '3mm Bleed Margin',
-        trim: 'Trim Cut Line',
-        safety: 'Inner Safe Zone',
-      },
-    },
-    evaluateChecks: (ctx) => {
-      const primary = ctx.slotsData.primary;
-      return [
-        {
-          ruleId: 'artwork-check',
-          name: 'Artwork File Verification',
-          description: 'Print-ready document verification.',
-          status: primary ? 'PASSED' : 'WAITING',
-          details: primary ? `File loaded: ${primary.file.name}` : 'Waiting for file upload',
-        },
-      ];
-    },
-  };
+/** Returns a product-specific upload workflow, or null when no workflow is registered. */
+export function getProductUploadConfig(productId?: string): ProductUploadConfig | null {
+  return productId ? productUploadConfigs[productId] || null : null;
 }

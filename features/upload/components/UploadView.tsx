@@ -123,6 +123,7 @@ export function UploadView({
   }, [slotsData, interiorFile, interiorUpload, coverFile, coverPreviewUrl, coverUpload]);
 
   const activeSlots = useMemo(() => {
+    if (!config) return [];
     return config.slots.filter((slot) => {
       if (!slot.condition) return true;
       return slot.condition(options);
@@ -165,7 +166,7 @@ export function UploadView({
     try {
       let previewUrl = '';
       let isObjectUrl = false;
-      let metadata: any = {};
+      let metadata: NonNullable<UploadedSlotData['metadata']> = {};
 
       try {
         const preview = await generateArtworkPreview(file);
@@ -178,7 +179,8 @@ export function UploadView({
           numPages: preview.numPages,
         };
       } catch (err) {
-        console.warn('Local preview generation skipped:', err);
+        console.warn('Local preview generation failed:', err);
+        metadata.previewFailed = true;
       }
 
       let uploadRes: UploadMetadataResponse | null = null;
@@ -225,6 +227,7 @@ export function UploadView({
   };
 
   const validationResults = useMemo(() => {
+    if (!config) return [];
     return config.evaluateChecks({
       productId: product?.id || 'books',
       options: options || {},
@@ -245,6 +248,30 @@ export function UploadView({
     });
   }, [activeSlots, options, currentSlotsData, uploadingSlots]);
 
+  if (!config) {
+    return (
+      <div className="w-full">
+        <div className="proof-container py-8">
+          <div className="proof-sheet p-8 border border-[#C4161C] bg-white max-w-2xl" role="alert">
+            <h1 className="text-xl font-bold text-[#0F1218]">Upload workflow unavailable</h1>
+            <p className="reading-text-soft text-sm mt-2">
+              There is no product-specific upload workflow configured for {product?.name || 'this product'}.
+              Choose a supported format before uploading artwork.
+            </p>
+            <button
+              type="button"
+              onClick={() => onNavigate('catalogue')}
+              className="btn-proof-primary text-xs py-2 px-6 mt-5"
+            >
+              Back to catalogue
+            </button>
+          </div>
+        </div>
+        <Footer onNavigate={onNavigate} />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <div className="proof-container py-6">
@@ -252,11 +279,11 @@ export function UploadView({
 
         <div className="border-b border-[#0F1218] pb-4 mb-8">
           <div className="flex justify-between items-baseline flex-wrap gap-2">
-            <h1>Upload Print Artwork</h1>
-            <span className="sample-stamp">Local preview</span>
+            <h1>{config.title}</h1>
+            <span className="sample-stamp">{config.preview.containerLabel}</span>
           </div>
           <p className="reading-text-soft text-sm mt-1">
-            Files are previewed in this browser. Remote artwork storage and server preflight are not configured.
+            {config.subtitle} Files are previewed in this browser; remote artwork storage and server preflight are not configured.
           </p>
         </div>
 

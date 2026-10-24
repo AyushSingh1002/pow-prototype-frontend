@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { QuoteResponse } from '../../../types';
+import { formatPriceFromPaise } from '../../../lib/formatters';
 
 interface QuoteBreakdownProps {
   quote: QuoteResponse | null;
@@ -65,15 +66,6 @@ export function QuoteBreakdown({
 
   const activeQuoteToRender = quote || lastValidQuote;
 
-  const formatPrice = (paiseOrRupees: number) => {
-    const val = paiseOrRupees > 5000 ? Math.round(paiseOrRupees / 100) : paiseOrRupees;
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
-
   return (
     <aside className="proof-sheet p-6 border border-[#0F1218] bg-white sticky top-24">
       {/* Header with Sample price stamp */}
@@ -133,7 +125,7 @@ export function QuoteBreakdown({
                   >
                     <span className="text-[#5A6070]">{li.description}</span>
                     <span className="tabular-nums font-semibold text-[#0F1218]">
-                      {formatPrice(li.lineTotal)}
+                      {formatPriceFromPaise(li.lineTotal)}
                     </span>
                   </div>
                 );
@@ -147,14 +139,14 @@ export function QuoteBreakdown({
                   Total estimate
                 </span>
                 <span className="text-3xl font-extrabold tabular-nums text-[#0F1218]">
-                  {formatPrice(displayTotal || activeQuoteToRender.total)}
+                  {formatPriceFromPaise(displayTotal || activeQuoteToRender.total)}
                 </span>
               </div>
 
               <div className="flex justify-between items-center text-xs text-[#5A6070] mt-1">
                 <span>{quantity} copies</span>
                 <span className="tabular-nums">
-                  {formatPrice(Math.round((displayTotal || activeQuoteToRender.total) / (quantity || 1)))} per copy
+                  {formatPriceFromPaise(Math.round((displayTotal || activeQuoteToRender.total) / (quantity || 1)))} per copy
                 </span>
               </div>
             </div>

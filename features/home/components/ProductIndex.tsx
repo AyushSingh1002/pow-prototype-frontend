@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product, StorefrontPage } from '../../../types';
 import { PrintingIntent } from './SentenceBuilder';
+import { formatPriceFromPaise } from '../../../lib/formatters';
 
 interface ProductIndexProps {
   products: Product[];
@@ -53,16 +54,6 @@ export function ProductIndex({
 
   const activeProduct =
     orderedProducts.find((p) => p.id === activeProductId) || orderedProducts[0];
-
-  const formatPrice = (paiseOrRupees: number) => {
-    // If backend returns paise, divide by 100, else standard
-    const inr = paiseOrRupees > 5000 ? Math.round(paiseOrRupees / 100) : paiseOrRupees;
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(inr);
-  };
 
   return (
     <section className="py-16 sm:py-24 lg:py-32" aria-label="Available print catalogue index">
@@ -125,7 +116,7 @@ Choose a format
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-[#5A6070]">Starts at</span>
                       <span className="text-sm sm:text-base font-bold tabular-nums text-[#0F1218]">
-                        {formatPrice(product.sampleStartingPrice || 250)}
+                        {formatPriceFromPaise(product.sampleStartingPrice || 25000)}
                       </span>
                     </div>
                   </div>
@@ -174,7 +165,7 @@ Choose a format
                     <div className="text-right shrink-0">
                       <span className="text-xs text-[#5A6070] block">Starting baseline</span>
                       <span className="text-2xl font-bold tabular-nums text-[#0F1218]">
-                        {formatPrice(activeProduct.sampleStartingPrice || 250)}
+                        {formatPriceFromPaise(activeProduct.sampleStartingPrice || 25000)}
                       </span>
                     </div>
                   </div>

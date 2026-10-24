@@ -88,6 +88,23 @@ interface OrderFlowContextType {
 
 const OrderFlowContext = createContext<OrderFlowContextType | undefined>(undefined);
 
+const storefrontPages: StorefrontPage[] = [
+  'home',
+  'catalogue',
+  'configurator',
+  'upload',
+  'proof',
+  'checkout',
+  'confirmation',
+  'tracking',
+  'bulk',
+  'help',
+];
+
+function isStorefrontPage(value: string): value is StorefrontPage {
+  return storefrontPages.some((page) => page === value);
+}
+
 export function OrderFlowProvider({ children }: { children: ReactNode }) {
   const [page, setPage] = useState<StorefrontPage>('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -122,6 +139,32 @@ export function OrderFlowProvider({ children }: { children: ReactNode }) {
   // Last Order and Checkout Result
   const [lastOrderId, setLastOrderId] = useState<string>('');
   const [lastCheckout, setLastCheckout] = useState<DemoCheckoutResponse | null>(null);
+
+  useEffect(() => {
+    const syncPageFromHash = () => {
+      const hash = window.location.hash.slice(1);
+      if (isStorefrontPage(hash)) {
+        setPage(hash);
+      } else {
+        setPage('home');
+        if (hash) {
+          window.history.replaceState(
+            null,
+            '',
+            `${window.location.pathname}${window.location.search}`
+          );
+        }
+      }
+    };
+
+    syncPageFromHash();
+    window.addEventListener('hashchange', syncPageFromHash);
+    window.addEventListener('popstate', syncPageFromHash);
+    return () => {
+      window.removeEventListener('hashchange', syncPageFromHash);
+      window.removeEventListener('popstate', syncPageFromHash);
+    };
+  }, []);
 
   // Load products & backend probe
   useEffect(() => {
@@ -159,8 +202,45 @@ export function OrderFlowProvider({ children }: { children: ReactNode }) {
   const navigate = (nextPage: StorefrontPage) => {
     setPage(nextPage);
     if (typeof window !== 'undefined') {
+      if (window.location.hash !== `#${nextPage}`) {
+        window.location.hash = nextPage;
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  const selectProduct = (id: string) => {
+    if (id === selectedProductId) return;
+
+    const previewUrls = new Set(
+      Object.values(slotsData)
+        .filter((slot): slot is UploadedSlotData => Boolean(slot?.isObjectUrl && slot.previewUrl))
+        .map((slot) => slot.previewUrl)
+    );
+    if (isCoverObjectUrl && coverPreviewUrl) previewUrls.add(coverPreviewUrl);
+    previewUrls.forEach((url) => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.warn('Revoke object URL warning:', err);
+      }
+    });
+
+    setSelectedProductId(id);
+    setActiveQuote(null);
+    setActiveOptions({});
+    setActiveQuantity(10);
+    setSlotsData({});
+    setInteriorFile(null);
+    setInteriorUpload(null);
+    setInteriorPageCount(12);
+    setInteriorCurrentPage(1);
+    setCoverFile(null);
+    setCoverPreviewUrl(null);
+    setIsCoverObjectUrl(false);
+    setCoverUpload(null);
+    setCoverMetadata(null);
+    setProofApproved(false);
   };
 
   const handleInteriorChange = (
@@ -298,7 +378,7 @@ export function OrderFlowProvider({ children }: { children: ReactNode }) {
         backendHealth,
         products,
         selectedProductId,
-        setSelectedProductId,
+        setSelectedProductId: selectProduct,
         currentProduct,
         activeQuote,
         activeOptions,

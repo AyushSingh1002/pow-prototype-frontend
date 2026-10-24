@@ -19,9 +19,8 @@ export function QuantitySelector({
   const minQty = product?.minQuantity || 1;
   const maxQty = product?.maxQuantity || 5000;
 
-  const presets = [10, 25, 50, 100, 250, 500].filter(
-    (q) => q >= minQty && q <= maxQty
-  );
+  const presets = [...new Set([...(minQty === 1 ? [1] : []), 10, 25, 50, 100, 250, 500])]
+    .filter((q) => q >= minQty && q <= maxQty);
 
   return (
     <div>
@@ -46,9 +45,21 @@ export function QuantitySelector({
           >
             <Minus size={14} />
           </button>
-          <span className="w-16 text-center font-bold text-base tabular-nums text-[#0F1218]">
-            {quantity}
-          </span>
+          <input
+            type="number"
+            min={minQty}
+            max={maxQty}
+            step={1}
+            value={quantity}
+            onChange={(event) => {
+              const nextQuantity = Number(event.target.value);
+              if (Number.isInteger(nextQuantity) && nextQuantity >= minQty && nextQuantity <= maxQty) {
+                onChange(nextQuantity);
+              }
+            }}
+            className="w-20 text-center font-bold text-base tabular-nums text-[#0F1218] border-0 bg-transparent focus:outline-none"
+            aria-label="Order quantity"
+          />
           <button
             type="button"
             onClick={() => onChange(Math.min(maxQty, quantity + 5))}

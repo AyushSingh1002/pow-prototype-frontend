@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Product, StorefrontPage } from '../../../types';
 import { useOrderFlow } from '../../../context/OrderFlowContext';
 import { Footer } from '../../../components/layout/Footer';
+import { formatPriceFromPaise } from '../../../lib/formatters';
 
 interface CatalogueViewProps {
   products?: Product[];
@@ -48,15 +49,6 @@ export function CatalogueView({
     }
     return list;
   }, [products, categoryFilter, sortOrder]);
-
-  const formatPrice = (paiseOrRupees: number) => {
-    const val = paiseOrRupees > 5000 ? Math.round(paiseOrRupees / 100) : paiseOrRupees;
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
 
   return (
     <div className="w-full">
@@ -185,7 +177,7 @@ export function CatalogueView({
                   <div className="text-right">
                     <span className="sample-stamp text-[9px] mb-1">Sample price</span>
                     <span className="text-lg font-bold tabular-nums block text-[#0F1218]">
-                      From {formatPrice(p.sampleStartingPrice || 250)}
+                      From {formatPriceFromPaise(p.sampleStartingPrice || 25000)}
                     </span>
                   </div>
 
@@ -228,7 +220,7 @@ export function CatalogueView({
 
                 <div className="pt-6 mt-6 border-t border-[#CBD0DA] flex items-center justify-between">
                   <span className="text-base font-bold tabular-nums text-[#0F1218]">
-                    From {formatPrice(p.sampleStartingPrice || 250)}
+                    From {formatPriceFromPaise(p.sampleStartingPrice || 25000)}
                   </span>
                   <button type="button" className="btn-proof-secondary text-xs py-1.5 px-3">
                     Configure

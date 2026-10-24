@@ -27,7 +27,7 @@ export function ProcessPath({ fixedStation, isTrackingPage = false }: ProcessPat
 
   // Map fixedStation to a progress index for tracking mode
   const fixedProgress = fixedStation
-    ? (stations.findIndex((s) => s.id === fixedStation) + 0.5) / stations.length
+    ? (stations.find((station) => station.id === fixedStation)?.threshold ?? 0) + 0.01
     : 0;
 
   useEffect(() => {

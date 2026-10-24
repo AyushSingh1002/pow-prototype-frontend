@@ -113,6 +113,11 @@ export function UploadSlotCard({
                   : 'Local preview only · not uploaded'}
               </span>
             </div>
+            {slotData.metadata?.previewFailed && (
+              <p className="text-xs font-semibold text-[#9A5A00]" role="status">
+                Preview unavailable. The file may be damaged, encrypted, or password-protected.
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-3">

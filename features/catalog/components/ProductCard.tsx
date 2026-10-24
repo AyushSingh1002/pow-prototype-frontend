@@ -3,7 +3,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Product } from '../../../types';
-import { money } from '../../../lib/formatters';
+import { formatPriceFromPaise } from '../../../lib/formatters';
 import { ProductVisual } from './ProductVisual';
 
 interface ProductCardProps {
@@ -26,7 +26,7 @@ export function ProductCard({ product, index, onClick }: ProductCardProps) {
         <h3>{product.name}</h3>
         <p>{product.description}</p>
         <div className="price-line">
-          <b>From {money(product.sampleStartingPrice, true)}</b>
+          <b>From {formatPriceFromPaise(product.sampleStartingPrice)}</b>
           <small>Server sample</small>
         </div>
         <button onClick={onClick}>
