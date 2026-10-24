@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    agentUpgrade: 'security',
+  },
   images: {
     unoptimized: true,
   },
@@ -19,4 +22,3 @@ const nextConfig = {
 }
 
 export default nextConfig
-
