@@ -143,6 +143,14 @@ export function Footer({ onNavigate: propNavigate }: FooterProps) {
                   Bulk quotes
                 </button>
               </li>
+              <li>
+                <a
+                  href={process.env.NEXT_PUBLIC_PRIVACY_POLICY_URL || '/privacy'}
+                  className="hover:underline"
+                >
+                  Privacy policy
+                </a>
+              </li>
             </ul>
           </div>
         </div>

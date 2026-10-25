@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   QuoteResponse,
   Product,
@@ -9,10 +9,16 @@ import {
 } from '../../../types';
 import { useOrderFlow } from '../../../context/OrderFlowContext';
 import { useAuth } from '../../../context/AuthContext';
-import { createDraftOrder, processDemoCheckout } from '../../../lib/api';
+import {
+  createDraftOrder,
+  createPaymentOrder,
+  getOrder,
+  processDemoCheckout,
+} from '../../../lib/api';
 import { formatPriceFromPaise } from '../../../lib/formatters';
 import { FlowStepper } from '../../../components/layout/FlowStepper';
 import { Footer } from '../../../components/layout/Footer';
+import { loadRazorpayCheckout } from '../../../lib/api/razorpay';
 
 interface CheckoutViewProps {
   quote?: QuoteResponse | null;
@@ -36,7 +42,7 @@ export function CheckoutView({
   onOrderSuccess: propOrderSuccess,
 }: CheckoutViewProps) {
   const context = useOrderFlow();
-  const { currentUser: contextUser } = useAuth();
+  const { currentUser: contextUser, isDemoMode, authReady } = useAuth();
 
   const quote = propQuote !== undefined ? propQuote : context.activeQuote;
   const product = propProduct !== undefined ? propProduct : context.currentProduct;
@@ -53,16 +59,22 @@ export function CheckoutView({
       context.setLastCheckout(checkout);
     });
 
+  const isDemoCheckout = isDemoMode && quote?.isSample !== false;
   const [deliveryAddress, setDeliveryAddress] = useState({
-    name: 'Ayush Singh',
-    phone: '+91 98765 43210',
-    address: 'Flat 402, Block B, Pre-Press Towers',
-    city: 'New Delhi',
-    pincode: '110001',
+    name: isDemoCheckout ? 'Ayush Singh' : '',
+    phone: isDemoCheckout ? '+91 98765 43210' : '',
+    address: isDemoCheckout ? 'Flat 402, Block B, Pre-Press Towers' : '',
+    city: isDemoCheckout ? 'New Delhi' : '',
+    pincode: isDemoCheckout ? '110001' : '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkoutCharges, setCheckoutCharges] = useState<
+    Array<{ code: string; amount: number; description?: string }> | null
+  >(null);
+  const [paymentPending, setPaymentPending] = useState(false);
+  const checkoutAttempt = useRef<{ fingerprint: string; idempotencyKey: string } | null>(null);
 
   const validateDeliveryAddress = () => {
     const name = deliveryAddress.name.trim();
@@ -93,6 +105,11 @@ export function CheckoutView({
 
     return null;
   };
+  const displayCharges = checkoutCharges ?? quote?.lineItems.map((item) => ({
+    code: item.code,
+    amount: item.lineTotal,
+    description: item.description,
+  })) ?? [];
 
   const handlePlaceDemoOrder = async () => {
     setError(null);
@@ -133,6 +150,92 @@ export function CheckoutView({
     }
   };
 
+  const waitForPaymentConfirmation = async (orderId: string, token: string) => {
+    setPaymentPending(true);
+    for (let attempt = 0; attempt < 24; attempt += 1) {
+      const result = await getOrder(orderId, token);
+      if (result.order.status === 'CONFIRMED') {
+        context.setLastOrderId(orderId);
+        onNavigate('confirmation');
+        setPaymentPending(false);
+        return;
+      }
+      if (result.order.status === 'CANCELLED') {
+        throw new Error('Payment was not completed. You can create a new checkout attempt.');
+      }
+      await new Promise((resolve) => window.setTimeout(resolve, 2500));
+    }
+    context.setLastOrderId(orderId);
+    onNavigate('confirmation');
+    setPaymentPending(false);
+  };
+
+  const handlePlacePaidOrder = async () => {
+    setError(null);
+    const validationError = validateDeliveryAddress();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    if (!quote?.id || !currentUser) {
+      setError('A current quote and verified customer sign-in are required.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const contact = {
+        name: deliveryAddress.name.trim(),
+        phone: deliveryAddress.phone.replace(/\s+/g, ''),
+        address: deliveryAddress.address.trim(),
+        city: deliveryAddress.city.trim(),
+        pincode: deliveryAddress.pincode.trim(),
+      };
+      const fingerprint = JSON.stringify({ quoteId: quote.id, contact });
+      if (checkoutAttempt.current?.fingerprint !== fingerprint) {
+        checkoutAttempt.current = {
+          fingerprint,
+          idempotencyKey: `checkout-${window.crypto.randomUUID()}`,
+        };
+      }
+      const order = await createDraftOrder({
+        quoteId: quote.id,
+        token: currentUser,
+        contact,
+        idempotencyKey: checkoutAttempt.current.idempotencyKey,
+      });
+      setCheckoutCharges(order.lineItems);
+      const paymentOrder = await createPaymentOrder(order.id, currentUser);
+      await loadRazorpayCheckout();
+      if (!window.Razorpay) throw new Error('Razorpay checkout could not be loaded.');
+      const checkout = new window.Razorpay({
+        key: paymentOrder.keyId,
+        amount: paymentOrder.amount,
+        currency: paymentOrder.currency,
+        name: 'Press & Proof',
+        description: 'Print order payment',
+        order_id: paymentOrder.paymentOrderId,
+        handler: () => {
+          void waitForPaymentConfirmation(order.id, currentUser).catch((paymentError: unknown) => {
+            setError(paymentError instanceof Error ? paymentError.message : 'Payment confirmation could not be checked.');
+            setPaymentPending(false);
+          });
+        },
+        modal: {
+          ondismiss: () => setIsSubmitting(false),
+        },
+        theme: { color: '#0F1218' },
+      });
+      checkout.on('payment.failed', (response) => {
+        setError(response.error?.description || 'Payment did not complete.');
+        setIsSubmitting(false);
+      });
+      checkout.open();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not start secure checkout.');
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="proof-container py-6">
@@ -140,11 +243,13 @@ export function CheckoutView({
 
         <div className="border-b border-[#0F1218] pb-4 mb-8">
           <div className="flex justify-between items-baseline flex-wrap gap-2">
-            <h1>Demo Checkout</h1>
-            <span className="sample-stamp">Prototype demo</span>
+            <h1>{isDemoCheckout ? 'Demo Checkout' : 'Secure Checkout'}</h1>
+            <span className="sample-stamp">{isDemoCheckout ? 'Prototype demo' : 'Production checkout'}</span>
           </div>
           <p className="reading-text-soft text-sm mt-1">
-            Review delivery destination and inspect the job ticket. No payment or financial data is collected.
+            {isDemoCheckout
+              ? 'Review delivery destination and inspect the job ticket. No payment or financial data is collected.'
+              : 'Review your delivery destination and server-calculated charges before paying securely.'}
           </p>
         </div>
 
@@ -153,7 +258,7 @@ export function CheckoutView({
           <div className="lg:col-span-7 space-y-6">
             <div className="proof-sheet p-6 md:p-8 border border-[#0F1218] bg-white space-y-6">
               <h2 className="text-xl font-bold" style={{ fontFamily: 'var(--font-headline)' }}>
-                1. Delivery details (not saved)
+                1. Delivery details ({isDemoCheckout ? 'not saved' : 'required for delivery'})
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -224,7 +329,7 @@ export function CheckoutView({
               </div>
             </div>
 
-            {/* Transparent Demo Notice Panel */}
+            {isDemoCheckout ? (
             <div className="p-6 bg-[#FFD60A] border-2 border-[#0F1218] space-y-2">
               <span className="sample-stamp">Prototype safety</span>
               <h3 className="text-lg font-bold text-[#0F1218]" style={{ fontFamily: 'var(--font-headline)' }}>
@@ -234,19 +339,39 @@ export function CheckoutView({
                 This prototype demonstrates the order flow only. Delivery details stay in this browser and are not sent or saved. No bank, card, or UPI details are requested or stored. The demo checkout charges nothing and does not create a production order.
               </p>
             </div>
+            ) : (
+              <div className="p-6 border-2 border-[#0F1218] bg-white space-y-2">
+                <h3 className="text-lg font-bold text-[#0F1218]" style={{ fontFamily: 'var(--font-headline)' }}>
+                  Payment is processed securely by Razorpay.
+                </h3>
+                <p className="reading-text text-sm text-[#0F1218]">
+                  Your delivery details and order information are saved to process and fulfill this order. Tax and shipping are calculated by the server before payment. Contact details are retained for {process.env.NEXT_PUBLIC_CONTACT_DATA_RETENTION_DAYS} days, then deleted from the order record.
+                </p>
+                <a className="text-sm underline" href={process.env.NEXT_PUBLIC_PRIVACY_POLICY_URL || '/privacy'}>
+                  Read the privacy policy
+                </a>
+              </div>
+            )}
 
             {error && (
               <div className="p-3 bg-[#FFF3F3] border border-[#C4161C] text-xs font-semibold text-[#C4161C]">
                 {error}
               </div>
             )}
+            {paymentPending && (
+              <p role="status" className="text-sm text-[#00628F]">
+                Payment received by the provider; waiting for the verified server confirmation.
+              </p>
+            )}
 
             <button
               className="btn-proof-primary w-full py-4 text-base font-bold"
-              disabled={isSubmitting || !quote?.id || !currentUser}
-              onClick={handlePlaceDemoOrder}
+              disabled={isSubmitting || paymentPending || !authReady || !quote?.id || !currentUser}
+              onClick={isDemoCheckout ? handlePlaceDemoOrder : handlePlacePaidOrder}
             >
-              {isSubmitting ? 'Placing demo order...' : 'Place demo order'}
+              {isSubmitting
+                ? isDemoCheckout ? 'Placing demo order...' : 'Starting secure payment...'
+                : isDemoCheckout ? 'Place demo order' : 'Continue to payment'}
             </button>
           </div>
 
@@ -288,25 +413,31 @@ export function CheckoutView({
                 <div className="flex justify-between py-1 border-b border-[#CBD0DA]">
                   <span className="text-[#5A6070]">Shipping method</span>
                   <span className="font-semibold text-[#0F1218]">
-                    Standard Courier (Sample)
+                    {isDemoCheckout
+                      ? 'Standard Courier (Sample)'
+                      : checkoutCharges
+                        ? 'Configured shipping provider'
+                        : 'Calculated by shipping provider at order creation'}
                   </span>
                 </div>
 
-                {quote?.lineItems.map((li, idx) => (
+                {displayCharges.map((li, idx) => (
                   <div key={idx} className="flex justify-between py-0.5 text-[#5A6070]">
-                    <span>{li.description}</span>
+                    <span>{li.description || li.code}</span>
                     <span className="tabular-nums font-medium text-[#0F1218]">
-                      {formatPriceFromPaise(li.lineTotal)}
+                      {formatPriceFromPaise(li.amount)}
                     </span>
                   </div>
                 ))}
 
                 <div className="pt-4 border-t-2 border-[#0F1218] flex justify-between items-baseline">
                   <span className="text-base font-bold text-[#0F1218]" style={{ fontFamily: 'var(--font-headline)' }}>
-                    Illustrative total
+                    {isDemoCheckout ? 'Illustrative total' : checkoutCharges ? 'Total due' : 'Print subtotal'}
                   </span>
                   <span className="text-2xl font-extrabold tabular-nums text-[#0F1218]">
-                    {quote ? formatPriceFromPaise(quote.total) : 'No valid quote'}
+                    {checkoutCharges
+                      ? formatPriceFromPaise(checkoutCharges.reduce((sum, item) => sum + item.amount, 0))
+                      : quote ? formatPriceFromPaise(quote.total) : 'No valid quote'}
                   </span>
                 </div>
               </div>

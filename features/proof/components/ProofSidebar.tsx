@@ -37,9 +37,13 @@ export function ProofSidebar({
     <aside className="proof-sheet p-6 border border-[#0F1218] bg-white sticky top-24 space-y-6">
       {/* Header */}
       <div className="border-b border-[#0F1218] pb-4">
-        <span className="sample-stamp">Sample price</span>
+        {quote && (
+          <span className="sample-stamp">
+            {quote.isSample ? 'Sample price' : 'Production estimate'}
+          </span>
+        )}
         <h3 className="text-xl font-bold mt-2" style={{ fontFamily: 'var(--font-headline)' }}>
-          {product?.name || 'Custom Book'}
+          {product?.name || 'Product unavailable'}
         </h3>
         <p className="text-xs text-[#5A6070] mt-1">
           {quantity} copies · {interiorPageCount} pages
@@ -51,21 +55,21 @@ export function ProofSidebar({
         <div className="flex justify-between py-1 border-b border-[#CBD0DA]">
           <span className="text-[#5A6070]">Calculated spine</span>
           <span className="font-semibold text-[#0F1218] tabular-nums">
-            {spreadCalc?.spineWidthMm || 8.4} mm
+            {spreadCalc ? `${spreadCalc.spineWidthMm} mm` : 'Unavailable'}
           </span>
         </div>
 
         <div className="flex justify-between py-1 border-b border-[#CBD0DA]">
           <span className="text-[#5A6070]">Interior document</span>
           <span className="font-semibold text-[#0F1218] truncate max-w-[150px]">
-            {interiorFile?.name || 'Preflight PDF'}
+            {interiorFile?.name || 'Not uploaded'}
           </span>
         </div>
 
         <div className="flex justify-between py-1 border-b border-[#CBD0DA]">
           <span className="text-[#5A6070]">Cover artwork</span>
           <span className="font-semibold text-[#0F1218] truncate max-w-[150px]">
-            {coverFile?.name || 'Standard template'}
+            {coverFile?.name || 'Not uploaded'}
           </span>
         </div>
 
@@ -77,9 +81,11 @@ export function ProofSidebar({
         ))}
 
         <div className="flex justify-between items-baseline pt-3">
-          <span className="text-sm font-bold text-[#0F1218]">Sample total</span>
+          <span className="text-sm font-bold text-[#0F1218]">
+            {quote ? (quote.isSample ? 'Sample total' : 'Quoted total') : 'Total'}
+          </span>
           <span className="text-2xl font-extrabold tabular-nums text-[#0F1218]">
-            {formatPriceFromPaise(quote?.total || 263100)}
+            {quote ? formatPriceFromPaise(quote.total) : 'Quote unavailable'}
           </span>
         </div>
       </div>

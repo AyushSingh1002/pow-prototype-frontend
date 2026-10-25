@@ -21,6 +21,10 @@ export function SignInModal({
     isSignInOpen,
     closeSignIn,
     currentUser: contextUser,
+    accountLabel,
+    isDemoMode,
+    signInWithEmailOtp,
+    signOut,
     setCurrentUser: contextSetUser,
   } = useAuth();
 
@@ -28,6 +32,10 @@ export function SignInModal({
   const onClose = propOnClose || closeSignIn;
   const currentUser = propUser !== undefined ? propUser : contextUser;
   const onSelectUser = propSelectUser || contextSetUser;
+  const [email, setEmail] = useState('');
+  const [isSendingLink, setIsSendingLink] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -64,7 +72,7 @@ export function SignInModal({
           <X size={20} />
         </button>
 
-        <span className="sample-stamp">Prototype auth</span>
+        <span className="sample-stamp">{isDemoMode ? 'Prototype auth' : 'Secure customer sign-in'}</span>
         <h2 className="text-2xl font-bold mt-2" style={{ fontFamily: 'var(--font-headline)' }}>
           Customer Sign In
         </h2>
@@ -78,21 +86,25 @@ export function SignInModal({
               <span className="text-[10px] text-[#5A6070] uppercase font-semibold block">
                 Signed in as
               </span>
-              <span className="font-bold text-sm text-[#0F1218]">{currentUser}</span>
+              <span className="font-bold text-sm text-[#0F1218]">
+                {propUser !== undefined ? currentUser : accountLabel}
+              </span>
             </div>
             <button
               className="btn-proof-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
-              onClick={() => onSelectUser(null)}
+              onClick={() => (isDemoMode ? onSelectUser(null) : signOut())}
             >
               <LogOut size={13} /> Sign out
             </button>
           </div>
         )}
 
-        <div className="mb-4 border-b border-[#CBD0DA] pb-3 text-xs font-semibold text-[#5A6070]">
-          Prototype profiles
-        </div>
-        <div className="space-y-3">
+        {isDemoMode ? (
+          <>
+            <div className="mb-4 border-b border-[#CBD0DA] pb-3 text-xs font-semibold text-[#5A6070]">
+              Prototype profiles
+            </div>
+            <div className="space-y-3">
             {demoAccounts.map((acc) => (
               <button
                 key={acc.id}
@@ -115,7 +127,49 @@ export function SignInModal({
                 )}
               </button>
             ))}
-        </div>
+            </div>
+          </>
+        ) : (
+          <form
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setError(null);
+              setNotice(null);
+              setIsSendingLink(true);
+              try {
+                await signInWithEmailOtp(email.trim());
+                setNotice('Check your email for a secure sign-in link.');
+              } catch (signInError) {
+                setError(signInError instanceof Error ? signInError.message : 'Could not send sign-in link.');
+              } finally {
+                setIsSendingLink(false);
+              }
+            }}
+            className="space-y-3"
+          >
+            <label htmlFor="auth-email" className="text-xs font-semibold text-[#5A6070] block">
+              Email address
+            </label>
+            <input
+              id="auth-email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="w-full p-3 border border-[#0F1218] rounded-[var(--control-radius)] bg-white"
+            />
+            <button
+              type="submit"
+              disabled={isSendingLink}
+              className="btn-proof-primary w-full py-3"
+            >
+              {isSendingLink ? 'Sending link...' : 'Email me a secure sign-in link'}
+            </button>
+            {notice && <p role="status" className="text-sm text-[#00628F]">{notice}</p>}
+            {error && <p role="alert" className="text-sm text-[#C4161C]">{error}</p>}
+          </form>
+        )}
       </div>
     </div>
   );

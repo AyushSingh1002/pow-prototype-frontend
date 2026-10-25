@@ -19,6 +19,8 @@ import { FlowStepper } from '../../../components/layout/FlowStepper';
 import { Footer } from '../../../components/layout/Footer';
 import { UploadSlotCard } from './UploadSlotCard';
 import { PreflightChecklist } from './PreflightChecklist';
+import { useAuth } from '../../../context/AuthContext';
+import { completeArtworkUpload, uploadArtworkFile } from '../../../lib/api/uploads';
 
 interface UploadViewProps {
   quote?: QuoteResponse | null;
@@ -70,6 +72,7 @@ export function UploadView({
   onCoverRemove: propCoverRemove,
 }: UploadViewProps) {
   const context = useOrderFlow();
+  const { currentUser, isDemoMode, authReady, openSignIn } = useAuth();
 
   const quote = propQuote !== undefined ? propQuote : context.activeQuote;
   const product = propProduct !== undefined ? propProduct : context.currentProduct;
@@ -134,6 +137,18 @@ export function UploadView({
     setSlotErrors((prev) => ({ ...prev, [slot.id]: null }));
 
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    const inferredMimeType = {
+      '.pdf': 'application/pdf',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.tif': 'image/tiff',
+      '.tiff': 'image/tiff',
+    }[ext] ?? '';
+    const browserMimeType = file.type === 'image/jpg' ? 'image/jpeg' : file.type;
+    const mimeType = slot.acceptedMimeTypes.includes(browserMimeType)
+      ? browserMimeType
+      : inferredMimeType;
     const isExtensionAllowed = slot.acceptedExtensions.some(
       (allowed) => ext === allowed.toLowerCase()
     );
@@ -163,9 +178,9 @@ export function UploadView({
     }
 
     setUploadingSlots((prev) => ({ ...prev, [slot.id]: true }));
+    let previewUrl = '';
+    let isObjectUrl = false;
     try {
-      let previewUrl = '';
-      let isObjectUrl = false;
       let metadata: NonNullable<UploadedSlotData['metadata']> = {};
 
       try {
@@ -184,15 +199,44 @@ export function UploadView({
       }
 
       let uploadRes: UploadMetadataResponse | null = null;
-      try {
-        uploadRes = await registerArtworkUpload({
+      if (!isDemoMode) {
+        if (!authReady || !currentUser) {
+          openSignIn();
+          throw new Error('Sign in before uploading production artwork.');
+        }
+        if (!quote || quote.isSample) {
+          throw new Error('A current production quote is required before uploading artwork.');
+        }
+        const initiated = await registerArtworkUpload({
           originalFilename: file.name,
-          mimeType: file.type || 'application/pdf',
+          mimeType,
           sizeBytes: file.size,
-          quoteId: quote?.id,
+          slotId: slot.id,
+          quoteId: quote.id,
+          token: currentUser,
         });
-      } catch (err) {
-        console.warn('Server preflight bypassed in demo mode');
+        if (!initiated.uploadUrl || !initiated.fileId) {
+          throw new Error('The secure upload service did not return an upload destination.');
+        }
+        await uploadArtworkFile(initiated.uploadUrl, file, mimeType);
+        const completed = await completeArtworkUpload(initiated.fileId, currentUser);
+        if (completed.status !== 'scanned' || !completed.preflight) {
+          throw new Error('Server-side artwork scanning and preflight did not complete.');
+        }
+        uploadRes = { ...initiated, status: completed.status, preflight: completed.preflight };
+        metadata.numPages = completed.preflight.pageCount;
+      } else {
+        try {
+          uploadRes = await registerArtworkUpload({
+            originalFilename: file.name,
+            mimeType,
+            sizeBytes: file.size,
+            slotId: slot.id,
+            quoteId: quote?.id,
+          });
+        } catch (err) {
+          console.warn('Demo upload registration failed:', err);
+        }
       }
 
       const slotResult: UploadedSlotData = {
@@ -210,10 +254,14 @@ export function UploadView({
       } else if (slot.id === 'cover') {
         onCoverChange(file, previewUrl, isObjectUrl, uploadRes, metadata);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      if (isObjectUrl && previewUrl) URL.revokeObjectURL(previewUrl);
       setSlotErrors((prev) => ({
         ...prev,
-        [slot.id]: err.message || 'Artwork processing failed. Ensure file is unencrypted.',
+        [slot.id]:
+          err instanceof Error
+            ? err.message
+            : 'Artwork processing failed. Ensure file is unencrypted.',
       }));
     } finally {
       setUploadingSlots((prev) => ({ ...prev, [slot.id]: false }));
@@ -229,7 +277,7 @@ export function UploadView({
   const validationResults = useMemo(() => {
     if (!config) return [];
     return config.evaluateChecks({
-      productId: product?.id || 'books',
+      productId: product?.id || '',
       options: options || {},
       slotsData: currentSlotsData,
       quantity: orderQuantity,
@@ -244,9 +292,11 @@ export function UploadView({
       const isRequired =
         typeof slot.required === 'function' ? slot.required(options) : slot.required;
       if (!isRequired) return true;
-      return Boolean(currentSlotsData[slot.id]?.file);
+      const slotData = currentSlotsData[slot.id];
+      if (!slotData?.file) return false;
+      return isDemoMode || slotData.uploadResponse?.status === 'scanned';
     });
-  }, [activeSlots, options, currentSlotsData, uploadingSlots]);
+  }, [activeSlots, options, currentSlotsData, uploadingSlots, isDemoMode]);
 
   if (!config) {
     return (
@@ -283,7 +333,10 @@ export function UploadView({
             <span className="sample-stamp">{config.preview.containerLabel}</span>
           </div>
           <p className="reading-text-soft text-sm mt-1">
-            {config.subtitle} Files are previewed in this browser; remote artwork storage and server preflight are not configured.
+            {config.subtitle}{' '}
+            {isDemoMode
+              ? 'Files are previewed in this browser; remote artwork storage and server preflight are not configured.'
+              : 'Files are stored privately and must pass server-side security and print preflight before continuing.'}
           </p>
         </div>
 

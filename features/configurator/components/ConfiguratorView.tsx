@@ -11,6 +11,7 @@ import { QuantitySelector } from './QuantitySelector';
 import { QuoteBreakdown } from './QuoteBreakdown';
 import { LiveBookPreview } from './LiveBookPreview';
 import { fallbackProducts } from '../../catalog/data/fallbackProducts';
+import { useAuth } from '../../../context/AuthContext';
 
 interface ConfiguratorViewProps {
   products?: Product[];
@@ -39,6 +40,7 @@ export function ConfiguratorView({
     handleQuoteReady: contextQuoteReady,
     navigate: contextNavigate,
   } = useOrderFlow();
+  const { currentUser, isDemoMode, authReady, openSignIn } = useAuth();
 
   const products = propProducts || contextProducts;
   const selectedProductId = propSelectedId || contextSelectedId;
@@ -47,7 +49,9 @@ export function ConfiguratorView({
   const onNavigate = propNavigate || contextNavigate;
 
   const currentProduct =
-    products.find((p) => p.id === selectedProductId) || products[0] || fallbackProducts[0];
+    products.find((p) => p.id === selectedProductId) ||
+    products[0] ||
+    (isDemoMode ? fallbackProducts[0] : null);
 
   const [options, setOptions] = useState<Record<string, string>>({});
   const [printOptions, setPrintOptions] = useState<PrintOption[]>([]);
@@ -61,7 +65,7 @@ export function ConfiguratorView({
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [quoteRequestRevision, setQuoteRequestRevision] = useState(0);
 
-  const quoteOptions = currentProduct.id === 'books'
+  const quoteOptions = isDemoMode && currentProduct?.id === 'books'
     ? { ...options, pages: options.pages || '120', finish: options.finish || 'matte' }
     : options;
   const configuredOptions = printOptions;
@@ -69,21 +73,33 @@ export function ConfiguratorView({
   // Load option definitions
   useEffect(() => {
     let isMounted = true;
+    if (!currentProduct) {
+      setQuote(null);
+      setQuoteError(null);
+      setPrintOptions([]);
+      setOptions({});
+      setLoadingOptions(false);
+      setOptionsError('The production catalogue is unavailable. Please try again later.');
+      return () => {
+        isMounted = false;
+      };
+    }
+    const product = currentProduct;
     setQuote(null);
     setQuoteError(null);
     setOptionsError(null);
     setPrintOptions([]);
     setOptions({});
     setQuantity((currentQuantity) =>
-      Math.max(currentProduct.minQuantity, Math.min(currentProduct.maxQuantity, currentQuantity))
+      Math.max(product.minQuantity, Math.min(product.maxQuantity, currentQuantity))
     );
 
     async function loadOptions() {
       setLoadingOptions(true);
       try {
-        const fetched = await fetchPrintOptions(currentProduct.id);
+        const fetched = await fetchPrintOptions(product.id);
         if (fetched.length === 0) {
-          throw new Error(`No print configuration is available for ${currentProduct.name}.`);
+          throw new Error(`No print configuration is available for ${product.name}.`);
         }
         if (isMounted) {
           setPrintOptions(fetched);
@@ -93,7 +109,7 @@ export function ConfiguratorView({
               defaultOpts[opt.code] = opt.choices[0].value;
             }
           });
-          if (currentProduct.id === 'books') {
+          if (isDemoMode && product.id === 'books') {
             defaultOpts.pages = '120';
           }
           setOptions(defaultOpts);
@@ -106,7 +122,7 @@ export function ConfiguratorView({
           setOptionsError(
             err instanceof Error
               ? err.message
-              : `Unable to load configuration for ${currentProduct.name}.`
+              : `Unable to load configuration for ${product.name}.`
           );
         }
       } finally {
@@ -117,21 +133,28 @@ export function ConfiguratorView({
     return () => {
       isMounted = false;
     };
-  }, [currentProduct.id, currentProduct.minQuantity, currentProduct.maxQuantity, currentProduct.name]);
+  }, [currentProduct?.id, currentProduct?.minQuantity, currentProduct?.maxQuantity, currentProduct?.name]);
 
   // Recalculate quote
   useEffect(() => {
-    if (Object.keys(options).length === 0) return;
+    if (!currentProduct || Object.keys(options).length === 0) return;
+    const product = currentProduct;
 
     let isMounted = true;
     async function getQuote() {
+      if (!authReady) return;
+      if (!isDemoMode && !currentUser) {
+        setQuoteError('Sign in with your verified customer account to request a quote.');
+        return;
+      }
       setCalculatingQuote(true);
       setQuoteError(null);
       try {
         const res = await createQuote({
-          productId: currentProduct.id,
+          productId: product.id,
           options: quoteOptions,
           quantity,
+          token: currentUser ?? undefined,
         });
         if (isMounted) {
           setQuote(res);
@@ -150,7 +173,7 @@ export function ConfiguratorView({
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [currentProduct.id, options, quantity, quoteRequestRevision]);
+  }, [currentProduct?.id, options, quantity, quoteRequestRevision, authReady, isDemoMode, currentUser]);
 
   const handleOptionChange = (code: string, value: string) => {
     setOptions((prev) => ({ ...prev, [code]: value }));
@@ -163,7 +186,7 @@ export function ConfiguratorView({
   };
 
   const handleContinue = () => {
-    if (quote) {
+    if (quote && currentProduct) {
       onQuoteReady(quote, currentProduct, quoteOptions, quantity);
       onNavigate('upload');
     }
@@ -175,6 +198,21 @@ export function ConfiguratorView({
   const finishChoice = (options['finish'] || options['cover_finish'] || 'matte').toLowerCase();
   const pageCountChoice = parseInt(options['pages'] || '120', 10) || 120;
 
+  if (!currentProduct) {
+    return (
+      <div className="proof-container py-6">
+        <FlowStepper activeStep={1} onNavigate={onNavigate} />
+        <div className="proof-sheet p-8 border border-[#0F1218] bg-white" role="status">
+          <h1 className="text-2xl font-bold">Catalogue unavailable</h1>
+          <p className="reading-text-soft mt-3">
+            Production product configuration is not available right now. Please try again later.
+          </p>
+        </div>
+        <Footer onNavigate={onNavigate} />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <div className="proof-container py-6">
@@ -185,7 +223,9 @@ export function ConfiguratorView({
         <div className="border-b border-[#0F1218] pb-4 mb-8">
           <div className="flex justify-between items-baseline flex-wrap gap-2">
             <h1>Configure {currentProduct.name}</h1>
-            <span className="sample-stamp">Sample prices</span>
+            <span className="sample-stamp">
+              {isDemoMode || currentProduct.isSample ? 'Sample prices' : 'Production prices'}
+            </span>
           </div>
           <p className="reading-text-soft text-sm mt-1">
             Choose binding, paper weight and dimensions. Quotes update instantly through server integer calculation.
@@ -208,6 +248,14 @@ export function ConfiguratorView({
                     <p className="text-sm text-[#C4161C]" role="alert">
                       {optionsError}
                     </p>
+                  )}
+                  {!isDemoMode && !currentUser && (
+                    <div className="p-4 border border-[#C4161C] bg-white" role="status">
+                      <p className="text-sm">Sign in with a verified customer account to request a quote.</p>
+                      <button type="button" className="btn-proof-primary mt-3 px-5 py-2 text-xs" onClick={openSignIn}>
+                        Sign in
+                      </button>
+                    </div>
                   )}
                   {configuredOptions.map((opt) => (
                     <OptionSelector

@@ -6,3 +6,4 @@ export * from './quotes';
 export * from './uploads';
 export * from './orders';
 export * from './checkout';
+export * from './payments';

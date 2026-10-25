@@ -27,7 +27,7 @@ interface OrderFlowContextType {
   products: Product[];
   selectedProductId: string;
   setSelectedProductId: (id: string) => void;
-  currentProduct: Product;
+  currentProduct: Product | null;
 
   // Active Quote & Configuration
   activeQuote: QuoteResponse | null;
@@ -87,6 +87,9 @@ interface OrderFlowContextType {
 }
 
 const OrderFlowContext = createContext<OrderFlowContextType | undefined>(undefined);
+const demoMode =
+  process.env.NODE_ENV !== 'production' &&
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_MODE !== 'false';
 
 const storefrontPages: StorefrontPage[] = [
   'home',
@@ -109,8 +112,10 @@ export function OrderFlowProvider({ children }: { children: ReactNode }) {
   const [page, setPage] = useState<StorefrontPage>('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [backendHealth, setBackendHealth] = useState<BackendHealthState>({ connected: false });
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
-  const [selectedProductId, setSelectedProductId] = useState<string>('books');
+  const [products, setProducts] = useState<Product[]>(demoMode ? fallbackProducts : []);
+  const [selectedProductId, setSelectedProductId] = useState<string>(
+    demoMode ? 'books' : ''
+  );
 
   // Active Quote State
   const [activeQuote, setActiveQuote] = useState<QuoteResponse | null>(null);
@@ -170,6 +175,9 @@ export function OrderFlowProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     checkBackendHealth()
       .then((h) => {
+        if (!demoMode && h.isSample) {
+          throw new Error('Production storefront cannot use a demo backend.');
+        }
         setBackendHealth({ connected: true, version: h.pricingConfigVersion });
       })
       .catch((err) => {
@@ -179,11 +187,20 @@ export function OrderFlowProvider({ children }: { children: ReactNode }) {
 
     fetchProducts()
       .then((res) => {
+        if (!demoMode && res.data.some((product) => product.isSample)) {
+          throw new Error('Production storefront cannot display sample catalogue data.');
+        }
         if (res.data && res.data.length > 0) {
           setProducts(res.data);
+          setSelectedProductId((currentId) =>
+            res.data.some((product) => product.id === currentId)
+              ? currentId
+              : res.data[0].id
+          );
         }
       })
       .catch((err) => {
+        if (!demoMode) setProducts([]);
         console.warn('Using fallback initial products:', err);
       });
   }, []);
@@ -366,7 +383,7 @@ export function OrderFlowProvider({ children }: { children: ReactNode }) {
   };
 
   const currentProduct =
-    products.find((p) => p.id === selectedProductId) || products[0] || fallbackProducts[0];
+    products.find((p) => p.id === selectedProductId) || products[0] || null;
 
   return (
     <OrderFlowContext.Provider

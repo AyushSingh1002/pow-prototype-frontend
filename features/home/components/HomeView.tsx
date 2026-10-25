@@ -13,6 +13,10 @@ import { QuestionsSection } from './QuestionsSection';
 import { HomeBulkSection } from './HomeBulkSection';
 import { Footer } from '../../../components/layout/Footer';
 
+const demoMode =
+  process.env.NODE_ENV !== 'production' &&
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_MODE !== 'false';
+
 export interface HomeViewProps {
   products?: Product[];
   onNavigate?: (page: StorefrontPage) => void;
@@ -62,13 +66,15 @@ export function HomeView({
       <ProcessPath />
 
       {/* 5. Working Mini Configurator with Live Book Preview & Integer Quote */}
-      <MiniConfigurator
-        onNavigate={onNavigate}
-        onSelectProduct={onSelectProduct}
-      />
+      {demoMode && (
+        <MiniConfigurator
+          onNavigate={onNavigate}
+          onSelectProduct={onSelectProduct}
+        />
+      )}
 
       {/* 6. What Happens if Something is Wrong (Sample Policies) */}
-      <SamplePoliciesSection />
+      {demoMode && <SamplePoliciesSection />}
 
       {/* 7. Questions (Grouped Accordions) */}
       <QuestionsSection />

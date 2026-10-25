@@ -26,7 +26,11 @@ export function Header({
     navigate: contextNavigate,
     setIsMobileMenuOpen,
   } = useOrderFlow();
-  const { currentUser: contextUser, openSignIn: contextOpenSignIn } = useAuth();
+  const {
+    currentUser: contextUser,
+    accountLabel,
+    openSignIn: contextOpenSignIn,
+  } = useAuth();
 
   const currentPage = propPage || contextPage;
   const onNavigate = propNavigate || contextNavigate;
@@ -108,7 +112,7 @@ export function Header({
               title="Account profile"
             >
               <User size={16} />
-              <span>{currentUser}</span>
+              <span>{propUser !== undefined ? currentUser : accountLabel}</span>
             </button>
           ) : (
             <button

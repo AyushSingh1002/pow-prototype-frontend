@@ -30,10 +30,17 @@ const notoSerifDevanagari = Noto_Serif_Devanagari({
   weight: ['400', '600'],
 });
 
+const demoMode =
+  process.env.NODE_ENV !== 'production' &&
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_MODE !== 'false';
+
 export const metadata: Metadata = {
-  title: 'Press & Proof (Demo) — Print anything, see the price first',
-  description:
-    'Concept prototype for an Indian online printing store. Configure, proof and estimate your print job with illustrative sample prices.',
+  title: demoMode
+    ? 'Press & Proof (Demo) — Print anything, see the price first'
+    : 'Press & Proof — Print anything, see the price first',
+  description: demoMode
+    ? 'Concept prototype for an Indian online printing store with illustrative sample prices.'
+    : 'Configure, proof and order custom print products with server-calculated prices.',
   robots: {
     index: false,
     follow: false,
@@ -67,4 +74,3 @@ export default function RootLayout({
     </html>
   );
 }
-

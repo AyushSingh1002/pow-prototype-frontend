@@ -5,6 +5,7 @@ import { StorefrontPage } from '../../../types';
 import { createQuote } from '../../../lib/api/quotes';
 import { QuoteResponse } from '../../../types/api.types';
 import { LiveBookPreview } from '../../configurator/components/LiveBookPreview';
+import { useAuth } from '../../../context/AuthContext';
 
 interface MiniConfiguratorProps {
   onNavigate?: (page: StorefrontPage) => void;
@@ -12,6 +13,7 @@ interface MiniConfiguratorProps {
 }
 
 export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfiguratorProps) {
+  const { currentUser, isDemoMode, authReady, openSignIn } = useAuth();
   const [binding, setBinding] = useState<'perfect_bound' | 'hardcover' | 'saddle_stitch'>('perfect_bound');
   const [coverFinish, setCoverFinish] = useState<'matte' | 'gloss' | 'spot_uv' | 'foil'>('matte');
   const [pageCount, setPageCount] = useState<number>(120);
@@ -21,6 +23,13 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
   const totalCopies = 10;
 
   useEffect(() => {
+    if (!authReady) return;
+    if (!isDemoMode && !currentUser) {
+      setIsLoadingQuote(false);
+      setQuote(null);
+      setQuoteError('Sign in with your verified customer account to request a quote.');
+      return;
+    }
     let isCurrentRequest = true;
     setIsLoadingQuote(true);
     setQuoteError(null);
@@ -36,6 +45,7 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
         pages: String(pageCount),
         finish: coverFinish,
       },
+      token: currentUser ?? undefined,
     })
       .then((nextQuote) => {
         if (isCurrentRequest) setQuote(nextQuote);
@@ -52,7 +62,7 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
     return () => {
       isCurrentRequest = false;
     };
-  }, [binding, coverFinish, pageCount]);
+  }, [binding, coverFinish, pageCount, currentUser, isDemoMode, authReady]);
 
   const formatPrice = (paise: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -193,7 +203,9 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
             <div className="p-5 bg-[#E8EAEE] border border-[#0F1218] flex items-center justify-between flex-wrap gap-4" aria-live="polite">
               <div>
                 <span className="text-sm font-semibold text-[#0F1218]">Server quote</span>
-                <span className="text-xs text-[#5A6070] block mt-1.5">Illustrative rates · 10 copies · A5</span>
+                  <span className="text-xs text-[#5A6070] block mt-1.5">
+                    {isDemoMode ? 'Illustrative rates · 10 copies · A5' : 'Server pricing · 10 copies · A5'}
+                  </span>
               </div>
               <div className="text-right">
                 <span className="text-2xl font-bold tabular-nums text-[#0F1218] block">
@@ -204,6 +216,15 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
                 </span>
               </div>
             </div>
+            {!isDemoMode && !currentUser && (
+              <button
+                type="button"
+                className="btn-proof-primary w-full py-3 text-sm"
+                onClick={openSignIn}
+              >
+                Sign in to request a quote
+              </button>
+            )}
 
             <button
               className="btn-proof-primary w-full py-3.5 text-sm"

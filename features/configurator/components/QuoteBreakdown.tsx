@@ -71,7 +71,11 @@ export function QuoteBreakdown({
       {/* Header with Sample price stamp */}
       <div className="flex justify-between items-center border-b border-[#0F1218] pb-4 mb-5">
         <div>
-          <span className="sample-stamp">Sample price</span>
+          {activeQuoteToRender && (
+            <span className="sample-stamp">
+              {activeQuoteToRender.isSample ? 'Sample price' : 'Production estimate'}
+            </span>
+          )}
           <span className="text-xs text-[#5A6070] block mt-1.5 font-medium">
             Server integer estimate
           </span>

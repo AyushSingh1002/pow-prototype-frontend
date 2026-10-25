@@ -1,12 +1,20 @@
 import { OrderLookupResponse } from '../../types/api.types';
 import { getApiBase, handleResponse } from './client';
+import { ProductionOrderResponse } from '../../types/api.types';
 
 /** Create a draft order from a validated quote */
 export async function createDraftOrder(payload: {
   quoteId: string;
   idempotencyKey?: string;
   token: string;
-}): Promise<{ id: string; status: string }> {
+  contact?: {
+    name: string;
+    phone: string;
+    address: string;
+    city: string;
+    pincode: string;
+  };
+}): Promise<ProductionOrderResponse> {
   const idempotencyKey =
     payload.idempotencyKey ||
     `idem_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -18,9 +26,12 @@ export async function createDraftOrder(payload: {
       'Idempotency-Key': idempotencyKey,
       Accept: 'application/json',
     },
-    body: JSON.stringify({ quoteId: payload.quoteId }),
+    body: JSON.stringify({
+      quoteId: payload.quoteId,
+      ...(payload.contact ? { contact: payload.contact } : {}),
+    }),
   });
-  return handleResponse<{ id: string; status: string }>(res);
+  return handleResponse<ProductionOrderResponse>(res);
 }
 
 /** Lookup order details and audit status history */

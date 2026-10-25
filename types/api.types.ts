@@ -61,6 +61,16 @@ export interface OrderRecord {
   currency: string;
   createdAt: string;
   updatedAt: string;
+  taxAmount?: number;
+  shippingAmount?: number;
+  contact?: {
+    name: string;
+    phone: string;
+    address: string;
+    city: string;
+    pincode: string;
+  };
+  paymentOrderId?: string;
 }
 
 export interface OrderHistoryItem {
@@ -84,6 +94,11 @@ export interface UploadMetadataResponse {
   maxBytes: number;
   allowedMimeTypes: string[];
   isDemo: boolean;
+  preflight?: {
+    pageCount: number;
+    minimumDpi: number;
+    bleedVerified: boolean;
+  };
 }
 
 export interface DemoCheckoutResponse {
@@ -94,6 +109,22 @@ export interface DemoCheckoutResponse {
   isDemo: true;
   message: string;
   timestamp: string;
+}
+
+export interface PaymentOrderResponse {
+  paymentOrderId: string;
+  keyId: string;
+  amount: number;
+  currency: string;
+  orderId: string;
+}
+
+export interface ProductionOrderResponse {
+  id: string;
+  status: string;
+  total: number;
+  currency: string;
+  lineItems: Array<{ code: string; amount: number }>;
 }
 
 export interface BackendHealthResponse {

@@ -67,7 +67,7 @@ export function ProductIndex({
 Choose a format
             </h2>
             <p className="reading-text-soft text-base mt-2 max-w-xl">
-              Select a format to review binding mechanics, paper stocks and live sample integer estimates.
+              Select a format to review its print specifications and starting price.
             </p>
           </div>
           <button
@@ -78,6 +78,11 @@ Choose a format
           </button>
         </div>
 
+        {orderedProducts.length === 0 ? (
+          <p className="proof-sheet p-8 border border-[#0F1218] bg-white" role="status">
+            The production catalogue is temporarily unavailable. Please try again later.
+          </p>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Left Column: Left-aligned list of product names set large in Archivo */}
           <div className="lg:col-span-7 space-y-4">
@@ -114,9 +119,11 @@ Choose a format
                       {product.name}
                     </h3>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-[#5A6070]">Starts at</span>
+                      <span className="text-xs text-[#5A6070]">
+                        {product.isSample ? 'Sample starts at' : 'Base unit'}
+                      </span>
                       <span className="text-sm sm:text-base font-bold tabular-nums text-[#0F1218]">
-                        {formatPriceFromPaise(product.sampleStartingPrice || 25000)}
+                        {formatPriceFromPaise(product.sampleStartingPrice)}
                       </span>
                     </div>
                   </div>
@@ -138,7 +145,7 @@ Choose a format
             })}
           </div>
 
-          {/* Right Column: Fixed Interactive Preview Sheet with drawn illustration, From ₹X, and Sample price stamp */}
+          {/* Right Column: Fixed interactive preview and starting price */}
           <div className="lg:col-span-5 sticky top-24">
             {activeProduct && (
               <div
@@ -153,7 +160,7 @@ Choose a format
                 <div>
                   <div className="flex justify-between items-start gap-4">
                     <div>
-                      <span className="sample-stamp">Sample price</span>
+                      {activeProduct.isSample && <span className="sample-stamp">Sample price</span>}
                       <h3
                         className="text-2xl font-bold mt-3"
                         style={{ fontFamily: 'var(--font-headline)' }}
@@ -165,7 +172,7 @@ Choose a format
                     <div className="text-right shrink-0">
                       <span className="text-xs text-[#5A6070] block">Starting baseline</span>
                       <span className="text-2xl font-bold tabular-nums text-[#0F1218]">
-                        {formatPriceFromPaise(activeProduct.sampleStartingPrice || 25000)}
+                        {formatPriceFromPaise(activeProduct.sampleStartingPrice)}
                       </span>
                     </div>
                   </div>
@@ -194,6 +201,7 @@ Choose a format
             )}
           </div>
         </div>
+        )}
       </div>
     </section>
   );

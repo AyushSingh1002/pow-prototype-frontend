@@ -6,14 +6,20 @@ export async function createQuote(payload: {
   productId: string;
   options: Record<string, string>;
   quantity: number;
+  token?: string;
 }): Promise<QuoteResponse> {
   const res = await fetch(`${getApiBase()}/api/quotes`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
+      ...(payload.token ? { Authorization: `Bearer ${payload.token}` } : {}),
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      productId: payload.productId,
+      options: payload.options,
+      quantity: payload.quantity,
+    }),
   });
   return handleResponse<QuoteResponse>(res);
 }

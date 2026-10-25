@@ -43,9 +43,9 @@ export function CatalogueView({
         : products.filter((p) => p.category.toLowerCase() === categoryFilter.toLowerCase());
 
     if (sortOrder === 'asc') {
-      list = [...list].sort((a, b) => (a.sampleStartingPrice || 0) - (b.sampleStartingPrice || 0));
+      list = [...list].sort((a, b) => a.sampleStartingPrice - b.sampleStartingPrice);
     } else if (sortOrder === 'desc') {
-      list = [...list].sort((a, b) => (b.sampleStartingPrice || 0) - (a.sampleStartingPrice || 0));
+      list = [...list].sort((a, b) => b.sampleStartingPrice - a.sampleStartingPrice);
     }
     return list;
   }, [products, categoryFilter, sortOrder]);
@@ -56,7 +56,17 @@ export function CatalogueView({
         <div className="border-b border-[#0F1218] pb-4 mb-8">
           <div className="flex justify-between items-baseline flex-wrap gap-2">
             <h1>Product Catalogue</h1>
-            <span className="sample-stamp">Sample starting prices</span>
+            <span
+              className={
+                products.some((product) => product.isSample)
+                  ? 'sample-stamp'
+                  : 'text-xs font-semibold'
+              }
+            >
+              {products.some((product) => product.isSample)
+                ? 'Sample starting prices'
+                : 'Base unit prices'}
+            </span>
           </div>
           <p className="reading-text-soft text-sm mt-1">
             Browse standard formats, binding specifications and starting production tiers.
@@ -122,30 +132,40 @@ export function CatalogueView({
         {filtered.length === 0 ? (
           /* Empty state */
           <div className="proof-sheet p-12 border border-[#0F1218] text-center max-w-xl mx-auto space-y-4">
-            <span className="sample-stamp">Zero matches</span>
-            <h3 className="text-xl font-bold">Nothing matches your filters. Clear them or ask for a custom quote.</h3>
+            <span className="sample-stamp">
+              {products.length === 0 ? 'Catalogue unavailable' : 'Zero matches'}
+            </span>
+            <h3 className="text-xl font-bold">
+              {products.length === 0
+                ? 'The product catalogue is temporarily unavailable.'
+                : 'Nothing matches your filters. Clear them or ask for a custom quote.'}
+            </h3>
             <p className="reading-text-soft text-sm">
-              We print bespoke specifications for books, booklets, collateral and packaging beyond the standard catalogue.
+              {products.length === 0
+                ? 'Please try again later.'
+                : 'We print bespoke specifications for books, booklets, collateral and packaging beyond the standard catalogue.'}
             </p>
-            <div className="flex justify-center gap-4 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setCategoryFilter('all');
-                  setSortOrder('default');
-                }}
-                className="btn-proof-secondary text-xs"
-              >
-                Clear filters
-              </button>
-              <button
-                type="button"
-                onClick={() => onNavigate('bulk')}
-                className="btn-proof-primary text-xs"
-              >
-                Request custom quote
-              </button>
-            </div>
+            {products.length > 0 && (
+              <div className="flex justify-center gap-4 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCategoryFilter('all');
+                    setSortOrder('default');
+                  }}
+                  className="btn-proof-secondary text-xs"
+                >
+                  Clear filters
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('bulk')}
+                  className="btn-proof-primary text-xs"
+                >
+                  Request custom quote
+                </button>
+              </div>
+            )}
           </div>
         ) : viewMode === 'list' ? (
           /* Default View: Product Index List */
@@ -175,9 +195,12 @@ export function CatalogueView({
 
                 <div className="flex items-center gap-6 shrink-0">
                   <div className="text-right">
-                    <span className="sample-stamp text-[9px] mb-1">Sample price</span>
+                    {p.isSample && (
+                      <span className="sample-stamp text-[9px] mb-1">Sample price</span>
+                    )}
                     <span className="text-lg font-bold tabular-nums block text-[#0F1218]">
-                      From {formatPriceFromPaise(p.sampleStartingPrice || 25000)}
+                      {p.isSample ? 'From ' : 'Base unit: '}
+                      {formatPriceFromPaise(p.sampleStartingPrice)}
                     </span>
                   </div>
 
@@ -208,7 +231,7 @@ export function CatalogueView({
                     <span className="text-[10px] text-[#5A6070] uppercase font-semibold border border-[#CBD0DA] px-2 py-0.5">
                       {p.category}
                     </span>
-                    <span className="sample-stamp">Sample price</span>
+                    {p.isSample && <span className="sample-stamp">Sample price</span>}
                   </div>
                   <h3 className="text-xl font-bold text-[#0F1218] mb-2" style={{ fontFamily: 'var(--font-headline)' }}>
                     {p.name}
@@ -220,7 +243,7 @@ export function CatalogueView({
 
                 <div className="pt-6 mt-6 border-t border-[#CBD0DA] flex items-center justify-between">
                   <span className="text-base font-bold tabular-nums text-[#0F1218]">
-                    From {formatPriceFromPaise(p.sampleStartingPrice || 25000)}
+                    From                     {formatPriceFromPaise(p.sampleStartingPrice)}
                   </span>
                   <button type="button" className="btn-proof-secondary text-xs py-1.5 px-3">
                     Configure

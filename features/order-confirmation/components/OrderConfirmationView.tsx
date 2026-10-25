@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StorefrontPage } from '../../../types';
 import { useOrderFlow } from '../../../context/OrderFlowContext';
 import { Footer } from '../../../components/layout/Footer';
+import { useAuth } from '../../../context/AuthContext';
+import { getOrder } from '../../../lib/api';
+import { formatPriceFromPaise } from '../../../lib/formatters';
 
 interface OrderConfirmationViewProps {
   orderId?: string;
@@ -17,6 +20,9 @@ export function OrderConfirmationView({
   onTrack: propTrack,
 }: OrderConfirmationViewProps) {
   const context = useOrderFlow();
+  const { currentUser, isDemoMode } = useAuth();
+  const [productionOrder, setProductionOrder] = useState<Awaited<ReturnType<typeof getOrder>> | null>(null);
+  const [productionError, setProductionError] = useState<string | null>(null);
 
   const orderId = propOrderId !== undefined ? propOrderId : context.lastOrderId;
   const onNavigate = propNavigate || context.navigate;
@@ -31,6 +37,76 @@ export function OrderConfirmationView({
   const demoReference = useMemo(() => {
     return orderId || 'DEMO-PRNT-' + Math.random().toString(36).substring(2, 8).toUpperCase();
   }, [orderId]);
+
+  useEffect(() => {
+    if (isDemoMode) return;
+    if (!orderId || !currentUser) {
+      setProductionError('Sign in to view this order, or return to checkout to try again.');
+      return;
+    }
+    let cancelled = false;
+    getOrder(orderId, currentUser)
+      .then((result) => {
+        if (!cancelled) setProductionOrder(result);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setProductionError(error instanceof Error ? error.message : 'Order status could not be loaded.');
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isDemoMode, orderId, currentUser]);
+
+  if (!isDemoMode) {
+    return (
+      <div className="w-full">
+        <div className="proof-container py-12 md:py-20 flex flex-col items-center">
+          <div className="job-ticket-sheet proof-sheet max-w-2xl w-full p-8 md:p-12">
+            <div className="border-b-2 border-dashed border-[#0F1218] pb-6 mb-8">
+              <span className="sample-stamp">Production order</span>
+              <h1 className="text-3xl md:text-4xl font-extrabold mt-3">
+                {productionOrder?.order.status === 'CONFIRMED'
+                  ? 'Payment confirmed'
+                  : 'Order received'}
+              </h1>
+              <p className="reading-text-soft text-sm mt-2">
+                Payment and fulfillment status are provided by the order service.
+              </p>
+            </div>
+            {productionError ? (
+              <p className="text-sm text-[#C4161C]" role="alert">{productionError}</p>
+            ) : productionOrder ? (
+              <div className="space-y-4 text-sm">
+                <div className="flex justify-between border-b border-[#CBD0DA] py-2">
+                  <span>Order reference</span><strong className="font-mono">{productionOrder.order.id}</strong>
+                </div>
+                <div className="flex justify-between border-b border-[#CBD0DA] py-2">
+                  <span>Order status</span><strong>{productionOrder.order.status}</strong>
+                </div>
+                <div className="flex justify-between border-b border-[#CBD0DA] py-2">
+                  <span>Total</span>
+                  <strong>{formatPriceFromPaise(productionOrder.order.total)}</strong>
+                </div>
+                {productionOrder.order.status !== 'CONFIRMED' && (
+                  <p role="status" className="text-[#5A6070]">
+                    We are waiting for the payment provider confirmation. Refresh this page to check again.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p role="status">Loading order status…</p>
+            )}
+            <button className="btn-proof-secondary mt-8 py-3 px-6 text-sm" onClick={() => onNavigate('home')}>
+              Back to storefront
+            </button>
+          </div>
+        </div>
+        <Footer onNavigate={onNavigate} />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
