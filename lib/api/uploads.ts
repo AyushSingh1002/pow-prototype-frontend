@@ -44,13 +44,22 @@ export async function uploadArtworkFile(
   file: File,
   mimeType: string
 ): Promise<void> {
-  const response = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: { 'Content-Type': mimeType },
-    body: file,
-  });
-  if (!response.ok) {
-    throw new Error(`Secure artwork storage rejected the upload (HTTP ${response.status}).`);
+  try {
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': mimeType },
+      body: file,
+    });
+    if (!response.ok) {
+      throw new Error(`Secure artwork storage rejected the upload (HTTP ${response.status}).`);
+    }
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        'Artwork storage could not be reached. Check the R2 bucket CORS rules and storage endpoint.'
+      );
+    }
+    throw error;
   }
 }
 

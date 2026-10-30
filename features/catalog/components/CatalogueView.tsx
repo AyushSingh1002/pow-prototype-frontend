@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Product, StorefrontPage } from '../../../types';
 import { useOrderFlow } from '../../../context/OrderFlowContext';
 import { Footer } from '../../../components/layout/Footer';
-import { formatPriceFromPaise } from '../../../lib/formatters';
+import { formatPriceFromPaise, getProductStartingPrice } from '../../../lib/formatters';
 
 interface CatalogueViewProps {
   products?: Product[];
@@ -43,9 +43,15 @@ export function CatalogueView({
         : products.filter((p) => p.category.toLowerCase() === categoryFilter.toLowerCase());
 
     if (sortOrder === 'asc') {
-      list = [...list].sort((a, b) => a.sampleStartingPrice - b.sampleStartingPrice);
+      list = [...list].sort((a, b) => (
+        (getProductStartingPrice(a) ?? Number.MAX_SAFE_INTEGER) -
+        (getProductStartingPrice(b) ?? Number.MAX_SAFE_INTEGER)
+      ));
     } else if (sortOrder === 'desc') {
-      list = [...list].sort((a, b) => b.sampleStartingPrice - a.sampleStartingPrice);
+      list = [...list].sort((a, b) => (
+        (getProductStartingPrice(b) ?? Number.MIN_SAFE_INTEGER) -
+        (getProductStartingPrice(a) ?? Number.MIN_SAFE_INTEGER)
+      ));
     }
     return list;
   }, [products, categoryFilter, sortOrder]);
@@ -65,7 +71,7 @@ export function CatalogueView({
             >
               {products.some((product) => product.isSample)
                 ? 'Sample starting prices'
-                : 'Base unit prices'}
+                : 'Starting prices'}
             </span>
           </div>
           <p className="reading-text-soft text-sm mt-1">
@@ -171,6 +177,9 @@ export function CatalogueView({
           /* Default View: Product Index List */
           <div className="proof-sheet border border-[#0F1218] bg-white divide-y divide-[#CBD0DA]">
             {filtered.map((p) => (
+              (() => {
+                const startingPrice = getProductStartingPrice(p);
+                return (
               <div
                 key={p.id}
                 onClick={() => {
@@ -199,8 +208,9 @@ export function CatalogueView({
                       <span className="sample-stamp text-[9px] mb-1">Sample price</span>
                     )}
                     <span className="text-lg font-bold tabular-nums block text-[#0F1218]">
-                      {p.isSample ? 'From ' : 'Base unit: '}
-                      {formatPriceFromPaise(p.sampleStartingPrice)}
+                      {startingPrice === null
+                        ? <span className="text-[#C4161C]" role="alert">Price unavailable</span>
+                        : <>{p.isSample ? 'From ' : 'Starting at '}{formatPriceFromPaise(startingPrice)}</>}
                     </span>
                   </div>
 
@@ -212,12 +222,17 @@ export function CatalogueView({
                   </button>
                 </div>
               </div>
+                );
+              })()
             ))}
           </div>
         ) : (
           /* Optional Grid View */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((p) => (
+              (() => {
+                const startingPrice = getProductStartingPrice(p);
+                return (
               <div
                 key={p.id}
                 onClick={() => {
@@ -243,13 +258,17 @@ export function CatalogueView({
 
                 <div className="pt-6 mt-6 border-t border-[#CBD0DA] flex items-center justify-between">
                   <span className="text-base font-bold tabular-nums text-[#0F1218]">
-                    From                     {formatPriceFromPaise(p.sampleStartingPrice)}
+                    {startingPrice === null
+                      ? <span className="text-[#C4161C]" role="alert">Price unavailable</span>
+                      : <>{p.isSample ? 'From ' : 'Starting at '}{formatPriceFromPaise(startingPrice)}</>}
                   </span>
                   <button type="button" className="btn-proof-secondary text-xs py-1.5 px-3">
                     Configure
                   </button>
                 </div>
               </div>
+                );
+              })()
             ))}
           </div>
         )}

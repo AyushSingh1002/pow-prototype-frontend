@@ -6,6 +6,7 @@ import { createQuote } from '../../../lib/api/quotes';
 import { QuoteResponse } from '../../../types/api.types';
 import { LiveBookPreview } from '../../configurator/components/LiveBookPreview';
 import { useAuth } from '../../../context/AuthContext';
+import { formatPriceFromPaise } from '../../../lib/formatters';
 
 interface MiniConfiguratorProps {
   onNavigate?: (page: StorefrontPage) => void;
@@ -64,13 +65,9 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
     };
   }, [binding, coverFinish, pageCount, currentUser, isDemoMode, authReady]);
 
-  const formatPrice = (paise: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(Math.round(paise / 100));
-  };
+  const variableCost = quote?.lineItems
+    .filter((item) => item.code !== 'SETUP_FEE')
+    .reduce((sum, item) => sum + item.lineTotal, 0);
 
   return (
     <section className="py-14 sm:py-18 lg:py-20" aria-label="Interactive mini book configurator">
@@ -209,11 +206,16 @@ export function MiniConfigurator({ onNavigate, onSelectProduct }: MiniConfigurat
               </div>
               <div className="text-right">
                 <span className="text-2xl font-bold tabular-nums text-[#0F1218] block">
-                  {isLoadingQuote ? 'Calculating…' : quote ? formatPrice(quote.total) : 'Unavailable'}
+                  {isLoadingQuote ? 'Calculating…' : quote ? formatPriceFromPaise(quote.total) : 'Unavailable'}
                 </span>
                 <span className="text-xs text-[#5A6070]">
-                  {quote ? `${formatPrice(Math.round(quote.total / totalCopies))} average per copy` : quoteError || 'Waiting for server quote'}
+                  {quote ? `${formatPriceFromPaise(Math.round(quote.total / totalCopies))} average per copy` : quoteError || 'Waiting for server quote'}
                 </span>
+                {variableCost !== undefined && (
+                  <span className="mt-1 block text-xs text-[#5A6070]">
+                    Variable print cost: {formatPriceFromPaise(Math.round(variableCost / totalCopies))} per copy
+                  </span>
+                )}
               </div>
             </div>
             {!isDemoMode && !currentUser && (

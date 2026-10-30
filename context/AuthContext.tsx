@@ -19,6 +19,7 @@ interface AuthContextType {
   closeSignIn: () => void;
   signOut: () => void;
   signInWithEmailOtp: (email: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,7 +59,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isDemoMode) throw new Error('Email sign-in is not enabled in demo mode.');
     const { error } = await getSupabaseClient().auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) throw error;
+  };
+
+  const signInWithGoogle = async () => {
+    if (isDemoMode) throw new Error('Google sign-in is not enabled in demo mode.');
+    const { error } = await getSupabaseClient().auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
     if (error) throw error;
   };
@@ -96,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         closeSignIn,
         signOut,
         signInWithEmailOtp,
+        signInWithGoogle,
       }}
     >
       {children}

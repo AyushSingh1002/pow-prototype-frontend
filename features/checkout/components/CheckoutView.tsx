@@ -12,6 +12,7 @@ import { useAuth } from '../../../context/AuthContext';
 import {
   createDraftOrder,
   createPaymentOrder,
+  verifyRazorpayCheckout,
   getOrder,
   processDemoCheckout,
 } from '../../../lib/api';
@@ -59,7 +60,7 @@ export function CheckoutView({
       context.setLastCheckout(checkout);
     });
 
-  const isDemoCheckout = isDemoMode && quote?.isSample !== false;
+  const isDemoCheckout = isDemoMode;
   const [deliveryAddress, setDeliveryAddress] = useState({
     name: isDemoCheckout ? 'Ayush Singh' : '',
     phone: isDemoCheckout ? '+91 98765 43210' : '',
@@ -67,6 +68,7 @@ export function CheckoutView({
     city: isDemoCheckout ? 'New Delhi' : '',
     pincode: isDemoCheckout ? '110001' : '',
   });
+  const [deliveryMethod, setDeliveryMethod] = useState<'SHIP' | 'PICKUP'>('SHIP');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +78,8 @@ export function CheckoutView({
   const [paymentPending, setPaymentPending] = useState(false);
   const checkoutAttempt = useRef<{ fingerprint: string; idempotencyKey: string } | null>(null);
 
-  const validateDeliveryAddress = () => {
+  const validateDeliveryAddress = (method: 'SHIP' | 'PICKUP' = 'SHIP') => {
+    if (method === 'PICKUP') return null;
     const name = deliveryAddress.name.trim();
     const phone = deliveryAddress.phone.trim();
     const address = deliveryAddress.address.trim();
@@ -114,7 +117,7 @@ export function CheckoutView({
   const handlePlaceDemoOrder = async () => {
     setError(null);
 
-    const validationError = validateDeliveryAddress();
+    const validationError = validateDeliveryAddress('SHIP');
     if (validationError) {
       setError(validationError);
       return;
@@ -172,7 +175,7 @@ export function CheckoutView({
 
   const handlePlacePaidOrder = async () => {
     setError(null);
-    const validationError = validateDeliveryAddress();
+    const validationError = validateDeliveryAddress(deliveryMethod);
     if (validationError) {
       setError(validationError);
       return;
@@ -183,14 +186,14 @@ export function CheckoutView({
     }
     setIsSubmitting(true);
     try {
-      const contact = {
+      const contact = deliveryMethod === 'SHIP' ? {
         name: deliveryAddress.name.trim(),
         phone: deliveryAddress.phone.replace(/\s+/g, ''),
         address: deliveryAddress.address.trim(),
         city: deliveryAddress.city.trim(),
         pincode: deliveryAddress.pincode.trim(),
-      };
-      const fingerprint = JSON.stringify({ quoteId: quote.id, contact });
+      } : undefined;
+      const fingerprint = JSON.stringify({ quoteId: quote.id, contact, deliveryMethod });
       if (checkoutAttempt.current?.fingerprint !== fingerprint) {
         checkoutAttempt.current = {
           fingerprint,
@@ -201,6 +204,7 @@ export function CheckoutView({
         quoteId: quote.id,
         token: currentUser,
         contact,
+        deliveryMethod,
         idempotencyKey: checkoutAttempt.current.idempotencyKey,
       });
       setCheckoutCharges(order.lineItems);
@@ -214,10 +218,18 @@ export function CheckoutView({
         name: 'Press & Proof',
         description: 'Print order payment',
         order_id: paymentOrder.paymentOrderId,
-        handler: () => {
-          void waitForPaymentConfirmation(order.id, currentUser).catch((paymentError: unknown) => {
-            setError(paymentError instanceof Error ? paymentError.message : 'Payment confirmation could not be checked.');
+        handler: (response) => {
+          setPaymentPending(true);
+          void verifyRazorpayCheckout(
+            order.id,
+            response.razorpay_order_id,
+            response.razorpay_payment_id,
+            response.razorpay_signature,
+            currentUser,
+          ).then(() => waitForPaymentConfirmation(order.id, currentUser)).catch((paymentError: unknown) => {
+            setError(paymentError instanceof Error ? paymentError.message : 'Payment confirmation could not be verified.');
             setPaymentPending(false);
+            setIsSubmitting(false);
           });
         },
         modal: {
@@ -258,75 +270,107 @@ export function CheckoutView({
           <div className="lg:col-span-7 space-y-6">
             <div className="proof-sheet p-6 md:p-8 border border-[#0F1218] bg-white space-y-6">
               <h2 className="text-xl font-bold" style={{ fontFamily: 'var(--font-headline)' }}>
-                1. Delivery details ({isDemoCheckout ? 'not saved' : 'required for delivery'})
+                1. {isDemoCheckout ? 'Delivery details' : 'Delivery method'}
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <label htmlFor="delivery-name" className="text-xs font-semibold text-[#5A6070] block mb-1">
-                    Contact name
+              {!isDemoCheckout && (
+                <fieldset className="flex flex-wrap gap-5 text-sm">
+                  <legend className="sr-only">Delivery method</legend>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="delivery-method"
+                      value="SHIP"
+                      checked={deliveryMethod === 'SHIP'}
+                      onChange={() => setDeliveryMethod('SHIP')}
+                    />
+                    Ship to an address
                   </label>
-                  <input
-                    type="text"
-                    id="delivery-name"
-                    value={deliveryAddress.name}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, name: e.target.value })}
-                    className="w-full p-2 border border-[#0F1218] rounded-[var(--control-radius)] bg-white"
-                  />
-                </div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="delivery-method"
+                      value="PICKUP"
+                      checked={deliveryMethod === 'PICKUP'}
+                      onChange={() => setDeliveryMethod('PICKUP')}
+                    />
+                    Pick up
+                  </label>
+                </fieldset>
+              )}
 
-                <div>
-                  <label htmlFor="delivery-phone" className="text-xs font-semibold text-[#5A6070] block mb-1">
-                    Phone number
-                  </label>
-                  <input
-                    type="text"
-                    id="delivery-phone"
-                    value={deliveryAddress.phone}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phone: e.target.value })}
-                    className="w-full p-2 border border-[#0F1218] rounded-[var(--control-radius)] bg-white tabular-nums"
-                  />
-                </div>
+              {deliveryMethod === 'SHIP' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <label htmlFor="delivery-name" className="text-xs font-semibold text-[#5A6070] block mb-1">
+                      Contact name
+                    </label>
+                    <input
+                      type="text"
+                      id="delivery-name"
+                      value={deliveryAddress.name}
+                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, name: e.target.value })}
+                      className="w-full p-2 border border-[#0F1218] rounded-[var(--control-radius)] bg-white"
+                    />
+                  </div>
 
-                <div className="sm:col-span-2">
-                  <label htmlFor="delivery-address" className="text-xs font-semibold text-[#5A6070] block mb-1">
-                    Delivery address
-                  </label>
-                  <input
-                    type="text"
-                    id="delivery-address"
-                    value={deliveryAddress.address}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, address: e.target.value })}
-                    className="w-full p-2 border border-[#0F1218] rounded-[var(--control-radius)] bg-white"
-                  />
-                </div>
+                  <div>
+                    <label htmlFor="delivery-phone" className="text-xs font-semibold text-[#5A6070] block mb-1">
+                      Phone number
+                    </label>
+                    <input
+                      type="text"
+                      id="delivery-phone"
+                      value={deliveryAddress.phone}
+                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phone: e.target.value })}
+                      className="w-full p-2 border border-[#0F1218] rounded-[var(--control-radius)] bg-white tabular-nums"
+                    />
+                  </div>
 
-                <div>
-                  <label htmlFor="delivery-city" className="text-xs font-semibold text-[#5A6070] block mb-1">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    id="delivery-city"
-                    value={deliveryAddress.city}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })}
-                    className="w-full p-2 border border-[#0F1218] rounded-[var(--control-radius)] bg-white"
-                  />
-                </div>
+                  <div className="sm:col-span-2">
+                    <label htmlFor="delivery-address" className="text-xs font-semibold text-[#5A6070] block mb-1">
+                      Delivery address
+                    </label>
+                    <input
+                      type="text"
+                      id="delivery-address"
+                      value={deliveryAddress.address}
+                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, address: e.target.value })}
+                      className="w-full p-2 border border-[#0F1218] rounded-[var(--control-radius)] bg-white"
+                    />
+                  </div>
 
-                <div>
-                  <label htmlFor="delivery-pincode" className="text-xs font-semibold text-[#5A6070] block mb-1">
-                    PIN code (India)
-                  </label>
-                  <input
-                    type="text"
-                    id="delivery-pincode"
-                    value={deliveryAddress.pincode}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, pincode: e.target.value })}
-                    className="w-full p-2 border border-[#0F1218] rounded-[var(--control-radius)] bg-white tabular-nums"
-                  />
+                  <div>
+                    <label htmlFor="delivery-city" className="text-xs font-semibold text-[#5A6070] block mb-1">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      id="delivery-city"
+                      value={deliveryAddress.city}
+                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })}
+                      className="w-full p-2 border border-[#0F1218] rounded-[var(--control-radius)] bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="delivery-pincode" className="text-xs font-semibold text-[#5A6070] block mb-1">
+                      PIN code (India)
+                    </label>
+                    <input
+                      type="text"
+                      id="delivery-pincode"
+                      value={deliveryAddress.pincode}
+                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, pincode: e.target.value })}
+                      className="w-full p-2 border border-[#0F1218] rounded-[var(--control-radius)] bg-white tabular-nums"
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <p className="border border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
+                  Pickup selected. No shipping address or shipping charge will be added.
+                </p>
+              )}
             </div>
 
             {isDemoCheckout ? (
@@ -360,7 +404,7 @@ export function CheckoutView({
             )}
             {paymentPending && (
               <p role="status" className="text-sm text-[#00628F]">
-                Payment received by the provider; waiting for the verified server confirmation.
+                Payment submitted to the provider; waiting for verified server confirmation.
               </p>
             )}
 

@@ -29,7 +29,7 @@ export function ProofViewer({
   coverFile,
   coverPreviewUrl,
   effectiveLayout,
-  interiorPageCount = 120,
+  interiorPageCount = 0,
   currentManuscriptPage = 1,
   onManuscriptPageChange,
   spreadCalc,

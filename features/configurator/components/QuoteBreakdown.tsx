@@ -143,7 +143,7 @@ export function QuoteBreakdown({
                   Total estimate
                 </span>
                 <span className="text-3xl font-extrabold tabular-nums text-[#0F1218]">
-                  {formatPriceFromPaise(displayTotal || activeQuoteToRender.total)}
+                  {formatPriceFromPaise( activeQuoteToRender.total)}
                 </span>
               </div>
 

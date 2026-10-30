@@ -12,6 +12,7 @@ import { QuoteBreakdown } from './QuoteBreakdown';
 import { LiveBookPreview } from './LiveBookPreview';
 import { fallbackProducts } from '../../catalog/data/fallbackProducts';
 import { useAuth } from '../../../context/AuthContext';
+import { formatPriceFromPaise } from '../../../lib/formatters';
 
 interface ConfiguratorViewProps {
   products?: Product[];
@@ -223,9 +224,7 @@ export function ConfiguratorView({
         <div className="border-b border-[#0F1218] pb-4 mb-8">
           <div className="flex justify-between items-baseline flex-wrap gap-2">
             <h1>Configure {currentProduct.name}</h1>
-            <span className="sample-stamp">
-              {isDemoMode || currentProduct.isSample ? 'Sample prices' : 'Production prices'}
-            </span>
+            {(isDemoMode || currentProduct.isSample) && <span className="sample-stamp">Sample prices</span>}
           </div>
           <p className="reading-text-soft text-sm mt-1">
             Choose binding, paper weight and dimensions. Quotes update instantly through server integer calculation.
@@ -360,11 +359,13 @@ export function ConfiguratorView({
       >
         <div>
           <div className="flex items-center gap-1.5">
-            <span className="sample-stamp text-[10px]">Sample</span>
+          {(isDemoMode || quote?.isSample) && <span className="sample-stamp text-[10px]">Sample</span>}
             <span className="text-xs text-[#5A6070]">{quantity} copies</span>
           </div>
           <span className="text-lg font-bold tabular-nums text-[#0F1218] block leading-tight mt-0.5">
-            {quote ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Math.round(quote.total / 100)) : 'Calculating...'}
+          {calculatingQuote
+            ? quote ? `${formatPriceFromPaise(quote.total)} · Updating` : 'Calculating…'
+            : quote ? formatPriceFromPaise(quote.total) : 'Unavailable'}
           </span>
         </div>
 

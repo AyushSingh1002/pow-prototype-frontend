@@ -14,6 +14,7 @@ export async function createDraftOrder(payload: {
     city: string;
     pincode: string;
   };
+  deliveryMethod?: 'SHIP' | 'PICKUP';
 }): Promise<ProductionOrderResponse> {
   const idempotencyKey =
     payload.idempotencyKey ||
@@ -28,6 +29,7 @@ export async function createDraftOrder(payload: {
     },
     body: JSON.stringify({
       quoteId: payload.quoteId,
+      ...(payload.deliveryMethod ? { deliveryMethod: payload.deliveryMethod } : {}),
       ...(payload.contact ? { contact: payload.contact } : {}),
     }),
   });

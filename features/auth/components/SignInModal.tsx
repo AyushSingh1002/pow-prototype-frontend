@@ -24,6 +24,7 @@ export function SignInModal({
     accountLabel,
     isDemoMode,
     signInWithEmailOtp,
+    signInWithGoogle,
     signOut,
     setCurrentUser: contextSetUser,
   } = useAuth();
@@ -165,6 +166,22 @@ export function SignInModal({
               className="btn-proof-primary w-full py-3"
             >
               {isSendingLink ? 'Sending link...' : 'Email me a secure sign-in link'}
+            </button>
+            <button
+              type="button"
+              disabled={isSendingLink}
+              onClick={async () => {
+                setError(null);
+                setNotice(null);
+                try {
+                  await signInWithGoogle();
+                } catch (signInError) {
+                  setError(signInError instanceof Error ? signInError.message : 'Could not start Google sign-in.');
+                }
+              }}
+              className="w-full py-3 border border-[#0F1218] bg-white font-semibold"
+            >
+              Continue with Google
             </button>
             {notice && <p role="status" className="text-sm text-[#00628F]">{notice}</p>}
             {error && <p role="alert" className="text-sm text-[#C4161C]">{error}</p>}

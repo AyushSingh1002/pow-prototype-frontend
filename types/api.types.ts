@@ -85,6 +85,7 @@ export interface OrderHistoryItem {
 export interface OrderLookupResponse {
   order: OrderRecord;
   history: OrderHistoryItem[];
+  quote: Pick<QuoteResponse, 'lineItems' | 'total' | 'currency' | 'taxIncluded' | 'shippingIncluded'>;
 }
 
 export interface UploadMetadataResponse {

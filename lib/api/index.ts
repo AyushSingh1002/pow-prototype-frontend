@@ -7,3 +7,4 @@ export * from './uploads';
 export * from './orders';
 export * from './checkout';
 export * from './payments';
+export * from './staff';

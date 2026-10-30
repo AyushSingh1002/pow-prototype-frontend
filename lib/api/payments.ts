@@ -16,3 +16,27 @@ export async function createPaymentOrder(
   });
   return handleResponse<PaymentOrderResponse>(response);
 }
+
+export async function verifyRazorpayCheckout(
+  orderId: string,
+  paymentOrderId: string,
+  paymentId: string,
+  signature: string,
+  token: string,
+): Promise<{ status: 'verified' }> {
+  const response = await fetch(`${getApiBase()}/api/payments/verify`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      orderId,
+      paymentOrderId,
+      paymentId,
+      signature,
+    }),
+  });
+  return handleResponse<{ status: 'verified' }>(response);
+}

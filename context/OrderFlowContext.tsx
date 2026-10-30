@@ -118,7 +118,7 @@ export function OrderFlowProvider({ children }: { children: ReactNode }) {
   );
 
   // Active Quote State
-  const [activeQuote, setActiveQuote] = useState<QuoteResponse | null>(null);
+  const [activeQuote, setActiveQuoteState] = useState<QuoteResponse | null>(null);
   const [activeOptions, setActiveOptions] = useState<Record<string, string>>({});
   const [activeQuantity, setActiveQuantity] = useState<number>(10);
 
@@ -144,6 +144,33 @@ export function OrderFlowProvider({ children }: { children: ReactNode }) {
   // Last Order and Checkout Result
   const [lastOrderId, setLastOrderId] = useState<string>('');
   const [lastCheckout, setLastCheckout] = useState<DemoCheckoutResponse | null>(null);
+
+  const setActiveQuote = (quote: QuoteResponse | null) => {
+    setActiveQuoteState(quote);
+    if (typeof window === 'undefined') return;
+    if (quote) {
+      window.sessionStorage.setItem('printonweb.activeQuote', JSON.stringify(quote));
+    } else {
+      window.sessionStorage.removeItem('printonweb.activeQuote');
+    }
+  };
+
+  useEffect(() => {
+    try {
+      const savedQuote = window.sessionStorage.getItem('printonweb.activeQuote');
+      if (savedQuote) {
+        const quote = JSON.parse(savedQuote) as QuoteResponse;
+        const expiresAt = new Date(quote.expiresAt).getTime();
+        if (quote.id && Number.isFinite(expiresAt) && expiresAt > Date.now()) {
+          setActiveQuoteState(quote);
+        } else {
+          window.sessionStorage.removeItem('printonweb.activeQuote');
+        }
+      }
+    } catch {
+      window.sessionStorage.removeItem('printonweb.activeQuote');
+    }
+  }, []);
 
   useEffect(() => {
     const syncPageFromHash = () => {

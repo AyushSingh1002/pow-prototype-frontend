@@ -23,6 +23,8 @@ export function OrderConfirmationView({
   const { currentUser, isDemoMode } = useAuth();
   const [productionOrder, setProductionOrder] = useState<Awaited<ReturnType<typeof getOrder>> | null>(null);
   const [productionError, setProductionError] = useState<string | null>(null);
+  const [verificationTimedOut, setVerificationTimedOut] = useState(false);
+  const [verificationAttempt, setVerificationAttempt] = useState(0);
 
   const orderId = propOrderId !== undefined ? propOrderId : context.lastOrderId;
   const onNavigate = propNavigate || context.navigate;
@@ -45,19 +47,38 @@ export function OrderConfirmationView({
       return;
     }
     let cancelled = false;
-    getOrder(orderId, currentUser)
-      .then((result) => {
-        if (!cancelled) setProductionOrder(result);
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          setProductionError(error instanceof Error ? error.message : 'Order status could not be loaded.');
+    setProductionError(null);
+    setProductionOrder(null);
+    setVerificationTimedOut(false);
+
+    const verifyPayment = async () => {
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        try {
+          const result = await getOrder(orderId, currentUser);
+          if (cancelled) return;
+          setProductionOrder(result);
+          if (['CONFIRMED', 'IN_PRODUCTION', 'COMPLETED', 'CANCELLED'].includes(result.order.status)) {
+            return;
+          }
+        } catch (error: unknown) {
+          if (!cancelled) {
+            setProductionError(error instanceof Error ? error.message : 'Order status could not be loaded.');
+          }
+          return;
         }
-      });
+
+        if (attempt < 39) {
+          await new Promise((resolve) => window.setTimeout(resolve, 3000));
+        }
+      }
+      if (!cancelled) setVerificationTimedOut(true);
+    };
+
+    void verifyPayment();
     return () => {
       cancelled = true;
     };
-  }, [isDemoMode, orderId, currentUser]);
+  }, [isDemoMode, orderId, currentUser, verificationAttempt]);
 
   if (!isDemoMode) {
     return (
@@ -67,7 +88,7 @@ export function OrderConfirmationView({
             <div className="border-b-2 border-dashed border-[#0F1218] pb-6 mb-8">
               <span className="sample-stamp">Production order</span>
               <h1 className="text-3xl md:text-4xl font-extrabold mt-3">
-                {productionOrder?.order.status === 'CONFIRMED'
+                {productionOrder && ['CONFIRMED', 'IN_PRODUCTION', 'COMPLETED'].includes(productionOrder.order.status)
                   ? 'Payment confirmed'
                   : 'Order received'}
               </h1>
@@ -76,7 +97,16 @@ export function OrderConfirmationView({
               </p>
             </div>
             {productionError ? (
-              <p className="text-sm text-[#C4161C]" role="alert">{productionError}</p>
+              <div className="text-sm text-[#C4161C]" role="alert">
+                <p>{productionError}</p>
+                <button
+                  type="button"
+                  className="btn-proof-secondary mt-3 px-4 py-2"
+                  onClick={() => setVerificationAttempt((attempt) => attempt + 1)}
+                >
+                  Check status again
+                </button>
+              </div>
             ) : productionOrder ? (
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between border-b border-[#CBD0DA] py-2">
@@ -86,12 +116,39 @@ export function OrderConfirmationView({
                   <span>Order status</span><strong>{productionOrder.order.status}</strong>
                 </div>
                 <div className="flex justify-between border-b border-[#CBD0DA] py-2">
+                  <span>Payment status</span>
+                  <strong>
+                    {['CONFIRMED', 'IN_PRODUCTION', 'COMPLETED'].includes(productionOrder.order.status)
+                      ? 'Confirmed by server'
+                      : productionOrder.order.status === 'CANCELLED'
+                        ? 'Not confirmed'
+                        : 'Verification pending'}
+                  </strong>
+                </div>
+                <div className="flex justify-between border-b border-[#CBD0DA] py-2">
                   <span>Total</span>
                   <strong>{formatPriceFromPaise(productionOrder.order.total)}</strong>
                 </div>
-                {productionOrder.order.status !== 'CONFIRMED' && (
+                {productionOrder.order.status === 'CANCELLED' ? (
+                  <p role="alert" className="text-[#C4161C]">
+                    Payment was not confirmed. Contact support before trying checkout again.
+                  </p>
+                ) : verificationTimedOut ? (
+                  <div className="space-y-3">
+                    <p role="status" className="text-[#5A6070]">
+                      Payment confirmation is still pending. Your order is not marked paid. Check again or contact support with the order reference above.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn-proof-secondary px-4 py-2"
+                      onClick={() => setVerificationAttempt((attempt) => attempt + 1)}
+                    >
+                      Check status again
+                    </button>
+                  </div>
+                ) : !['CONFIRMED', 'IN_PRODUCTION', 'COMPLETED'].includes(productionOrder.order.status) && (
                   <p role="status" className="text-[#5A6070]">
-                    We are waiting for the payment provider confirmation. Refresh this page to check again.
+                    Verifying your payment with the order service…
                   </p>
                 )}
               </div>

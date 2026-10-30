@@ -1,8 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StorefrontPage } from '../../../types';
 import { useOrderFlow } from '../../../context/OrderFlowContext';
+import { useAuth } from '../../../context/AuthContext';
+import { getOrder } from '../../../lib/api';
+import { formatDate, formatPriceFromPaise } from '../../../lib/formatters';
+import { OrderLookupResponse } from '../../../types/api.types';
 import { Footer } from '../../../components/layout/Footer';
 import { ProcessPath } from '../../home/components/ProcessPath';
 
@@ -69,20 +73,49 @@ export function TrackingView({
   onNavigate: propNavigate,
 }: TrackingViewProps) {
   const { lastOrderId, navigate: contextNavigate } = useOrderFlow();
+  const { currentUser, isDemoMode } = useAuth();
   const onNavigate = propNavigate || contextNavigate;
 
-  const initialReference = propInitialOrderId || lastOrderId || 'DEMO-PRNT-84F2';
+  const initialReference = propInitialOrderId || lastOrderId || (isDemoMode ? 'DEMO-PRNT-84F2' : '');
   const [inputRef, setInputRef] = useState(initialReference);
+  const [productionOrder, setProductionOrder] = useState<OrderLookupResponse | null>(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
   const [lookupResult, setLookupResult] = useState<LookupResult>(() => {
     const reference = initialReference.trim().toUpperCase();
     const sample = demoTrackingSamples[reference];
     return sample ? { kind: 'found', reference, sample } : null;
   });
 
-  const handleLookup = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLookup = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     const reference = inputRef.trim().toUpperCase();
     setInputRef(reference);
+    setLookupResult(null);
+    setProductionOrder(null);
+
+    if (!isDemoMode) {
+      if (!/^[0-9A-F]{8}-[0-9A-F]{4}-[1-8][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i.test(reference)) {
+        setLookupResult({ kind: 'error', message: 'Enter the order reference from your confirmation.' });
+        return;
+      }
+      if (!currentUser) {
+        setLookupResult({ kind: 'error', message: 'Sign in with the account used to place this order.' });
+        return;
+      }
+
+      setIsLookingUp(true);
+      try {
+        setProductionOrder(await getOrder(reference, currentUser));
+      } catch (error: unknown) {
+        setLookupResult({
+          kind: 'error',
+          message: error instanceof Error ? error.message : 'Order status could not be loaded.',
+        });
+      } finally {
+        setIsLookingUp(false);
+      }
+      return;
+    }
 
     const validFormat =
       /^DEMO-(UPLD|PROOF|PRNT|DSPT|DLVD)-[A-F0-9]{4}$/.test(reference) ||
@@ -107,20 +140,27 @@ export function TrackingView({
     setLookupResult({ kind: 'found', reference, sample });
   };
 
+  useEffect(() => {
+    if (!isDemoMode && propInitialOrderId && currentUser) {
+      void handleLookup();
+    }
+  }, [isDemoMode, propInitialOrderId, currentUser]);
+
   return (
     <div className="w-full">
       <div className="proof-container py-8 md:py-16">
         <div className="border-b border-[#0F1218] pb-4 mb-8">
           <div className="flex justify-between items-baseline flex-wrap gap-2">
             <h1>Track Order Lifecycle</h1>
-            <span className="sample-stamp">Sample statuses</span>
+            {isDemoMode && <span className="sample-stamp">Sample statuses</span>}
           </div>
           <p className="reading-text-soft text-sm mt-1">
-            Simulate real-time status transitions from digital proof verification to dispatch.
+            {isDemoMode
+              ? 'Simulate real-time status transitions from digital proof verification to dispatch.'
+              : 'View the latest order status recorded by the order service.'}
           </p>
         </div>
 
-        {/* Demo Reference Lookup Form */}
         <div className="proof-sheet p-6 md:p-8 border border-[#0F1218] bg-white max-w-xl mb-10">
           <form onSubmit={handleLookup} className="space-y-4">
             <label className="text-sm font-bold text-[#0F1218] block" style={{ fontFamily: 'var(--font-headline)' }}>
@@ -131,18 +171,24 @@ export function TrackingView({
                 type="text"
                 value={inputRef}
                 onChange={(e) => setInputRef(e.target.value)}
-                placeholder="e.g. DEMO-PRNT-84F2"
+                placeholder={isDemoMode ? 'e.g. DEMO-PRNT-84F2' : 'Order reference'}
                 className="flex-1 p-2.5 border border-[#0F1218] rounded-[var(--control-radius)] bg-white text-sm font-mono uppercase"
                 aria-invalid={lookupResult?.kind === 'error'}
                 aria-describedby="tracking-lookup-message"
               />
-              <button type="submit" className="btn-proof-primary text-xs py-2 px-6">
+              <button type="submit" disabled={isLookingUp} className="btn-proof-primary text-xs py-2 px-6">
                 Lookup status
               </button>
             </div>
-            <p className="text-[11px] text-[#5A6070]">
-              Try DEMO-UPLD-1001, DEMO-PROOF-2002, DEMO-PRNT-84F2, DEMO-DSPT-3003, or DEMO-DLVD-4004. These sample statuses do not represent real manufacturing or persist in a database.
-            </p>
+            {isDemoMode ? (
+              <p className="text-[11px] text-[#5A6070]">
+                Try DEMO-UPLD-1001, DEMO-PROOF-2002, DEMO-PRNT-84F2, DEMO-DSPT-3003, or DEMO-DLVD-4004. These sample statuses do not represent real manufacturing or persist in a database.
+              </p>
+            ) : (
+              <p className="text-[11px] text-[#5A6070]">
+                Production status is available only to the account that placed the order.
+              </p>
+            )}
             <p
               id="tracking-lookup-message"
               className={`text-xs ${lookupResult?.kind === 'error' ? 'text-[#C4161C]' : 'text-[#5A6070]'}`}
@@ -150,8 +196,10 @@ export function TrackingView({
             >
               {lookupResult?.kind === 'error'
                 ? lookupResult.message
-                : lookupResult?.kind !== 'found'
-                  ? 'Look up a reference to view its sample status.'
+                : isLookingUp
+                  ? 'Loading order status…'
+                  : lookupResult?.kind !== 'found'
+                    ? 'Look up a reference to view its status.'
                   : ''}
             </p>
           </form>
@@ -191,6 +239,42 @@ export function TrackingView({
               </div>
             </div>
           </div>
+        )}
+
+        {productionOrder && (
+          <section className="proof-sheet p-6 md:p-8 border border-[#0F1218] bg-white max-w-2xl" aria-label="Production order status">
+            <div className="border-b border-[#0F1218] pb-3 mb-4">
+              <h2 className="text-xl font-bold">Order status</h2>
+              <p className="font-mono text-sm mt-1">{productionOrder.order.id}</p>
+            </div>
+            <div className="flex justify-between gap-4 border-b border-[#CBD0DA] py-3 text-sm">
+              <span className="text-[#5A6070]">Current status</span>
+              <strong>{productionOrder.order.status.replace(/_/g, ' ')}</strong>
+            </div>
+            <div className="flex justify-between gap-4 border-b border-[#CBD0DA] py-3 text-sm">
+              <span className="text-[#5A6070]">Order total</span>
+              <strong>{formatPriceFromPaise(productionOrder.order.total)}</strong>
+            </div>
+            <h3 className="text-sm font-bold mt-6 mb-2">Status history</h3>
+            {productionOrder.history.length ? (
+              <ol className="divide-y divide-[#CBD0DA]">
+                {productionOrder.history.map((entry) => (
+                  <li key={entry.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
+                    <span>
+                      {entry.fromStatus ? `${entry.fromStatus.replace(/_/g, ' ')} → ` : ''}
+                      <strong>{entry.toStatus.replace(/_/g, ' ')}</strong>
+                      {entry.reason && <span className="block text-xs text-[#5A6070] mt-1">{entry.reason}</span>}
+                    </span>
+                    <time className="text-xs text-[#5A6070]" dateTime={entry.createdAt}>
+                      {formatDate(entry.createdAt)}
+                    </time>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-sm text-[#5A6070]">No status history is available yet.</p>
+            )}
+          </section>
         )}
       </div>
 

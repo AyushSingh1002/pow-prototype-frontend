@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product, StorefrontPage } from '../../../types';
 import { PrintingIntent } from './SentenceBuilder';
-import { formatPriceFromPaise } from '../../../lib/formatters';
+import { formatPriceFromPaise, getProductStartingPrice } from '../../../lib/formatters';
 
 interface ProductIndexProps {
   products: Product[];
@@ -54,6 +54,9 @@ export function ProductIndex({
 
   const activeProduct =
     orderedProducts.find((p) => p.id === activeProductId) || orderedProducts[0];
+  const activeStartingPrice = activeProduct
+    ? getProductStartingPrice(activeProduct)
+    : null;
 
   return (
     <section className="py-16 sm:py-24 lg:py-32" aria-label="Available print catalogue index">
@@ -88,6 +91,7 @@ Choose a format
           <div className="lg:col-span-7 space-y-4">
             {orderedProducts.slice(0, 6).map((product) => {
               const isSelected = activeProduct?.id === product.id;
+              const startingPrice = getProductStartingPrice(product);
 
               return (
                 <div
@@ -120,10 +124,12 @@ Choose a format
                     </h3>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-[#5A6070]">
-                        {product.isSample ? 'Sample starts at' : 'Base unit'}
+                        {product.isSample ? 'Sample starts at' : 'Starting at'}
                       </span>
                       <span className="text-sm sm:text-base font-bold tabular-nums text-[#0F1218]">
-                        {formatPriceFromPaise(product.sampleStartingPrice)}
+                        {startingPrice === null
+                          ? <span className="text-[#C4161C]" role="alert">Price unavailable</span>
+                          : formatPriceFromPaise(startingPrice)}
                       </span>
                     </div>
                   </div>
@@ -170,17 +176,24 @@ Choose a format
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-xs text-[#5A6070] block">Starting baseline</span>
+                      <span className="text-xs text-[#5A6070] block">Starting at</span>
                       <span className="text-2xl font-bold tabular-nums text-[#0F1218]">
-                        {formatPriceFromPaise(activeProduct.sampleStartingPrice)}
+                        {activeStartingPrice === null
+                          ? <span className="text-base text-[#C4161C]" role="alert">Price unavailable</span>
+                          : formatPriceFromPaise(activeStartingPrice)}
                       </span>
                     </div>
                   </div>
 
-                  {/* Drawn Silhouette Illustration */}
-                  <div className="my-6 py-8 flex items-center justify-center bg-[#E8EAEE] border border-[#0F1218]">
-                    <ProductSilhouette type={activeProduct.id} />
-                  </div>
+                  {activeProduct.isSample ? (
+                    <div className="my-6 py-8 flex items-center justify-center bg-[#E8EAEE] border border-[#0F1218]">
+                      <ProductSilhouette type={activeProduct.id} />
+                    </div>
+                  ) : (
+                    <div className="my-6 flex min-h-48 items-center justify-center border border-dashed border-[#5A6070] bg-[#E8EAEE] px-6 text-center text-sm text-[#5A6070]">
+                      Product photography coming soon
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-[#0F1218] flex items-center justify-between gap-4">
